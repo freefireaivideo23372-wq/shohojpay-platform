@@ -24,6 +24,42 @@
 </head>
 <body class="bg-[#F4F7FA] text-slate-900 dark:bg-slate-950 dark:text-slate-100 min-h-screen pb-20 md:pb-0 transition-colors">
 
+
+  <!-- Wallet Edit Modal -->
+  <div id="editWalletModal" class="fixed inset-0 z-50 hidden bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-extrabold">✏️ ওয়ালেট নাম্বার এডিট করুন</h3>
+        <button id="closeEditWalletBtn" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500">✕</button>
+      </div>
+      <input id="editWalletId" type="hidden" />
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-500 mb-1">ওয়ালেট মেথড</label>
+          <select id="editWalletGw" class="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3 py-2.5 text-sm font-bold">
+            <option value="bKash">bKash</option><option value="Nagad">Nagad</option><option value="Rocket">Rocket</option><option value="Upay">Upay</option><option value="Cellfin">Cellfin</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-500 mb-1">একাউন্টের ধরন (Send Money / Cash Out)</label>
+          <select id="editWalletType" class="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3 py-2.5 text-sm font-bold">
+            <option value="Personal (Send Money)">Personal (Send Money)</option>
+            <option value="Agent (Cash Out)">Agent (Cash Out)</option>
+            <option value="Merchant (Payment)">Merchant (Payment)</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-500 mb-1">মোবাইল নাম্বার</label>
+          <input id="editWalletNum" type="text" class="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3.5 py-2.5 text-sm font-mono font-bold" />
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button id="cancelEditWalletBtn" class="px-4 py-2 rounded-xl text-sm font-bold text-slate-500">বাতিল</button>
+        <button id="saveEditWalletBtn" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold">✓ আপডেট সেভ করুন</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast -->
   <div id="toast" class="fixed top-16 right-4 left-4 sm:left-auto sm:max-w-sm z-50 hidden bg-slate-900 text-white px-4 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3">
     <span id="toastIcon" class="w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold text-xs shrink-0">✓</span>
@@ -357,10 +393,13 @@
           <div class="overflow-x-auto"><table class="w-full text-left text-xs sm:text-sm"><thead><tr class="border-b text-slate-500"><th class="py-2 px-2">Invoice</th><th class="py-2 px-2">Amount</th><th class="py-2 px-2">Status</th></tr></thead><tbody id="pendingTableBody" class="divide-y"></tbody></table></div>
         </div>
 
-        <!-- TAB: INVOICES -->
+        <!-- TAB: INVOICES (With Manual Approve & CSV Export!) -->
         <div id="dtab-invoices" class="hidden bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 card-shadow space-y-4">
-          <h3 class="text-lg font-extrabold">🧾 All Invoices &amp; Transactions</h3>
-          <div class="overflow-x-auto"><table class="w-full text-left text-xs sm:text-sm"><thead><tr class="border-b text-slate-500"><th class="py-2 px-2">Invoice</th><th class="py-2 px-2">Wallet</th><th class="py-2 px-2">TrxID</th><th class="py-2 px-2">Amount</th><th class="py-2 px-2">Status</th></tr></thead><tbody id="realTrxTableBody" class="divide-y"></tbody></table></div>
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <h3 class="text-lg font-extrabold">🧾 All Invoices &amp; Transactions</h3>
+            <button id="exportLiveCsvBtn" class="px-3.5 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold">⬇️ CSV ডাউনলোড</button>
+          </div>
+          <div class="overflow-x-auto"><table class="w-full text-left text-xs sm:text-sm"><thead><tr class="border-b text-slate-500"><th class="py-2 px-2">Invoice</th><th class="py-2 px-2">Wallet</th><th class="py-2 px-2">TrxID</th><th class="py-2 px-2">Amount</th><th class="py-2 px-2">Status</th><th class="py-2 px-2 text-right">Action</th></tr></thead><tbody id="realTrxTableBody" class="divide-y"></tbody></table></div>
         </div>
 
         <!-- TAB: STORED DATA (SMS LOGS) -->
@@ -369,15 +408,19 @@
           <div class="overflow-x-auto"><table class="w-full text-left text-xs sm:text-sm"><thead><tr class="border-b text-slate-500"><th class="py-2 px-2">Wallet</th><th class="py-2 px-2">TrxID</th><th class="py-2 px-2">Amount</th><th class="py-2 px-2">Used?</th></tr></thead><tbody id="realSmsLogsBody" class="divide-y"></tbody></table></div>
         </div>
 
-        <!-- TAB: WALLETS -->
+        <!-- TAB: WALLETS (Full Add / Edit / Active-Pause Toggle / Delete!) -->
         <div id="dtab-wallets" class="hidden bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 card-shadow space-y-4">
-          <h3 class="text-lg font-extrabold">📲 View Gateways &amp; Wallet Numbers</h3>
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-            <select id="realWalletGw" class="rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3 py-2.5 text-sm font-bold"><option value="bKash">bKash</option><option value="Nagad">Nagad</option><option value="Rocket">Rocket</option><option value="Upay">Upay</option></select>
-            <input id="realWalletNum" type="text" placeholder="017XXXXXXXX" class="rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3 py-2.5 text-sm font-mono" />
-            <button id="saveRealWalletBtn" class="px-4 py-2.5 rounded-xl bg-emerald-600 text-white font-bold text-sm">+ নাম্বার যোগ করুন</button>
+          <div>
+            <h3 class="text-lg font-extrabold">📲 View Gateways &amp; Wallet Numbers</h3>
+            <p class="text-xs text-slate-500">আপনার পার্সোনাল বা এজেন্ট নাম্বার যোগ করুন, এডিট করুন অথবা ১ ক্লিকে চালু/বন্ধ করুন।</p>
           </div>
-          <div id="realWalletsContainer" class="space-y-2 text-sm"></div>
+          <div class="grid grid-cols-1 sm:grid-cols-4 gap-2">
+            <select id="realWalletGw" class="rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3 py-2.5 text-sm font-bold"><option value="bKash">bKash</option><option value="Nagad">Nagad</option><option value="Rocket">Rocket</option><option value="Upay">Upay</option><option value="Cellfin">Cellfin</option></select>
+            <select id="realWalletType" class="rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3 py-2.5 text-sm font-bold"><option value="Personal (Send Money)">Personal (Send Money)</option><option value="Agent (Cash Out)">Agent (Cash Out)</option><option value="Merchant (Payment)">Merchant (Payment)</option></select>
+            <input id="realWalletNum" type="text" placeholder="017XXXXXXXX" class="rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3 py-2.5 text-sm font-mono" />
+            <button id="saveRealWalletBtn" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm">+ নাম্বার যোগ করুন</button>
+          </div>
+          <div id="realWalletsContainer" class="space-y-2.5 text-sm"></div>
         </div>
 
         <!-- TAB: PAYMENT LINKS -->
@@ -418,12 +461,24 @@
           </div>
         </div>
 
-        <!-- TAB: IPN / WEBHOOK & API -->
+        <!-- TAB: IPN / WEBHOOK & API (Show/Hide + Copy + 1-Click Regenerate New Key!) -->
         <div id="dtab-webhooks" class="hidden bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 card-shadow space-y-4">
-          <h3 class="text-lg font-extrabold">⚡ IPN / Webhook &amp; Developer API</h3>
-          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border flex items-center justify-between gap-2">
-            <code id="realApiKeyDisplay" class="font-mono text-xs font-bold text-emerald-600 truncate"></code>
-            <button id="copyRealApiKeyBtn" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-bold">Copy</button>
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <h3 class="text-lg font-extrabold">⚡ IPN / Webhook &amp; API Key Management</h3>
+              <p class="text-xs text-slate-500">নিরাপত্তার জন্য যেকোনো সময় ১ ক্লিকে নতুন API Key জেনারেট করতে পারবেন (পুরোনো Key সাথে সাথে বাতিল হবে)।</p>
+            </div>
+            <button id="rotateMasterKeyBtn" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-extrabold shrink-0 transition">🔄 নতুন API Key তৈরি করুন</button>
+          </div>
+          <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="truncate flex-1">
+              <div class="text-[11px] font-bold text-slate-400 uppercase">Master Live API Key</div>
+              <code id="realApiKeyDisplay" class="font-mono text-sm font-bold text-emerald-600"></code>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <button id="toggleApiKeyMaskBtn" class="px-3 py-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 text-xs font-bold">👁️ লুকান</button>
+              <button id="copyRealApiKeyBtn" class="px-3.5 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-bold">📋 Copy</button>
+            </div>
           </div>
           <pre id="devSnippetPre" class="bg-slate-950 text-emerald-300 p-4 rounded-2xl text-xs font-mono overflow-x-auto"></pre>
         </div>
@@ -618,10 +673,93 @@
           renderVolChart(total);
 
           document.getElementById('pendingTableBody').innerHTML = pending.map(i => `<tr><td class="py-2.5 px-2 font-mono">${i.invoice_id}</td><td class="py-2.5 px-2 font-bold">৳${i.amount}</td><td class="py-2.5 px-2 text-amber-600 font-bold">PENDING</td></tr>`).join('') || '<tr><td colspan="3" class="py-6 text-center text-slate-400">কোনো পেন্ডিং রিকোয়েস্ট নেই।</td></tr>';
-          document.getElementById('realTrxTableBody').innerHTML = invs.map(i => `<tr><td class="py-2.5 px-2 font-mono text-xs">${i.invoice_id}</td><td class="py-2.5 px-2 font-bold">${i.gateway||'—'}</td><td class="py-2.5 px-2 font-mono text-xs">${i.trx_id||'—'}</td><td class="py-2.5 px-2 font-bold">৳${i.amount}</td><td class="py-2.5 px-2 font-bold ${i.status==='APPROVED'?'text-emerald-600':'text-amber-600'}">${i.status}</td></tr>`).join('') || '<tr><td colspan="5" class="py-6 text-center text-slate-400">কোনো ইনভয়েস নেই।</td></tr>';
+          window.__liveInvs = invs;
+          window.__liveWallets = data.wallets || [];
+          document.getElementById('realTrxTableBody').innerHTML = invs.map(i => `
+            <tr>
+              <td class="py-2.5 px-2 font-mono text-xs">${i.invoice_id}</td>
+              <td class="py-2.5 px-2 font-bold">${i.gateway||'—'}</td>
+              <td class="py-2.5 px-2 font-mono text-xs">${i.trx_id||'—'}</td>
+              <td class="py-2.5 px-2 font-bold">৳${i.amount}</td>
+              <td class="py-2.5 px-2 font-bold ${i.status==='APPROVED'?'text-emerald-600':'text-amber-600'}">${i.status}</td>
+              <td class="py-2.5 px-2 text-right space-x-1">
+                ${i.status!=='APPROVED' ? `<button data-appinv="${i.id}" class="man-approve-btn px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-xs font-bold">✓ Approve</button>` : ''}
+                <button data-delinv="${i.id}" class="del-inv-btn px-2 py-1 rounded-lg bg-rose-50 text-rose-600 text-xs font-bold">🗑️</button>
+              </td>
+            </tr>
+          `).join('') || '<tr><td colspan="6" class="py-6 text-center text-slate-400">কোনো ইনভয়েস নেই।</td></tr>';
+
+          document.querySelectorAll('.man-approve-btn').forEach(b => b.addEventListener('click', async () => {
+            await fetch(ORIGIN + '/api/manage-invoice', { method: 'POST', headers: { 'Content-Type': 'application/json', 'shohojpay-api-key': currentUser.api_key }, body: JSON.stringify({ id: b.getAttribute('data-appinv'), action: 'approve' }) });
+            showToast('অ্যাপ্রুভ হয়েছে!', 'ইনভয়েস সফলভাবে Approve করা হয়েছে।', false); loadDashboard();
+          }));
+          document.querySelectorAll('.del-inv-btn').forEach(b => b.addEventListener('click', async () => {
+            await fetch(ORIGIN + '/api/manage-invoice', { method: 'POST', headers: { 'Content-Type': 'application/json', 'shohojpay-api-key': currentUser.api_key }, body: JSON.stringify({ id: b.getAttribute('data-delinv'), action: 'delete' }) });
+            showToast('ডিলিট হয়েছে', 'ইনভয়েস মুছে ফেলা হয়েছে।', false); loadDashboard();
+          }));
+
           document.getElementById('realSmsLogsBody').innerHTML = sms.map(s => `<tr><td class="py-2.5 px-2 font-bold">${s.gateway}</td><td class="py-2.5 px-2 font-mono text-emerald-600">${s.trx_id}</td><td class="py-2.5 px-2 font-bold">৳${s.amount}</td><td class="py-2.5 px-2 text-xs">${s.is_used?'Used':'Ready'}</td></tr>`).join('') || '<tr><td colspan="4" class="py-6 text-center text-slate-400">এখনো কোনো SMS আসেনি।</td></tr>';
-          document.getElementById('realWalletsContainer').innerHTML = (data.wallets || []).map(w => `<div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border flex justify-between"><span><strong>${w.gateway}</strong> • <span class="font-mono">${w.phone_number}</span></span><span class="text-xs text-emerald-600 font-bold">Active</span></div>`).join('');
-          document.getElementById('realWebsitesContainer').innerHTML = (data.websites || []).map(w => `<div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border flex justify-between items-center gap-2"><div><div class="font-bold">${w.site_name}</div><div class="font-mono text-xs text-indigo-600">${w.site_api_key}</div></div><button onclick="navigator.clipboard?.writeText('${w.site_api_key}')" class="px-3 py-1 rounded-lg bg-indigo-600 text-white text-xs font-bold">Copy</button></div>`).join('') || '<p class="text-xs text-slate-400">কোনো ওয়েবসাইট যোগ করা হয়নি।</p>';
+
+          // WALLETS WITH FULL EDIT, TOGGLE ACTIVE/PAUSED & DELETE!
+          document.getElementById('realWalletsContainer').innerHTML = (data.wallets || []).map(w => `
+            <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <div class="flex items-center gap-2">
+                  <strong class="text-base">${w.gateway}</strong>
+                  <span class="text-xs px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold">${w.account_type || 'Personal (Send Money)'}</span>
+                </div>
+                <div class="font-mono font-extrabold text-base mt-0.5">${w.phone_number}</div>
+              </div>
+              <div class="flex items-center gap-2">
+                <button data-wid="${w.id}" data-wact="${w.is_active}" class="toggle-wallet-btn px-3 py-1.5 rounded-xl text-xs font-extrabold ${w.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-500'}">${w.is_active ? '● Active' : '○ Paused'}</button>
+                <button data-wid="${w.id}" class="edit-wallet-btn px-3 py-1.5 rounded-xl bg-sky-100 text-sky-700 text-xs font-bold">✏️ Edit</button>
+                <button data-wid="${w.id}" class="del-wallet-btn px-2.5 py-1.5 rounded-xl bg-rose-100 text-rose-600 text-xs font-bold">🗑️</button>
+              </div>
+            </div>
+          `).join('') || '<p class="text-xs text-slate-400">কোনো নাম্বার নেই।</p>';
+
+          document.querySelectorAll('.toggle-wallet-btn').forEach(b => b.addEventListener('click', async () => {
+            const id = b.getAttribute('data-wid'); const cur = b.getAttribute('data-wact') === 'true';
+            await fetch(ORIGIN + '/api/wallets', { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'shohojpay-api-key': currentUser.api_key }, body: JSON.stringify({ id, is_active: !cur }) });
+            showToast('স্ট্যাটাস আপডেট!', !cur ? 'ওয়ালেট চালু করা হয়েছে।' : 'ওয়ালেট সাময়িক বন্ধ করা হয়েছে।', false); loadDashboard();
+          }));
+          document.querySelectorAll('.edit-wallet-btn').forEach(b => b.addEventListener('click', () => {
+            const w = (window.__liveWallets || []).find(x => String(x.id) === String(b.getAttribute('data-wid')));
+            if (!w) return;
+            document.getElementById('editWalletId').value = w.id;
+            document.getElementById('editWalletGw').value = w.gateway;
+            document.getElementById('editWalletType').value = w.account_type || 'Personal (Send Money)';
+            document.getElementById('editWalletNum').value = w.phone_number;
+            document.getElementById('editWalletModal').classList.remove('hidden');
+          }));
+          document.querySelectorAll('.del-wallet-btn').forEach(b => b.addEventListener('click', async () => {
+            await fetch(ORIGIN + '/api/wallets?id=' + encodeURIComponent(b.getAttribute('data-wid')), { method: 'DELETE', headers: { 'shohojpay-api-key': currentUser.api_key } });
+            showToast('মুছে ফেলা হয়েছে', 'ওয়ালেট নাম্বার ডিলিট হয়েছে।', false); loadDashboard();
+          }));
+
+          // WEBSITES WITH COPY, REGENERATE KEY, TOGGLE & DELETE!
+          document.getElementById('realWebsitesContainer').innerHTML = (data.websites || []).map(w => `
+            <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div class="truncate">
+                <div class="font-bold">${w.site_name} <span class="text-xs font-normal text-slate-500">(${w.site_url})</span></div>
+                <div class="font-mono text-xs text-indigo-600 mt-0.5 truncate">${w.site_api_key}</div>
+              </div>
+              <div class="flex items-center gap-1.5 shrink-0">
+                <button onclick="navigator.clipboard?.writeText('${w.site_api_key}')" class="px-2.5 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-bold">Copy</button>
+                <button data-sid="${w.id}" class="rot-site-btn px-2.5 py-1.5 rounded-lg bg-amber-500 text-white text-xs font-bold" title="নতুন API Key তৈরি করুন">🔄 New Key</button>
+                <button data-sid="${w.id}" class="del-site-btn px-2.5 py-1.5 rounded-lg bg-rose-100 text-rose-600 text-xs font-bold">🗑️</button>
+              </div>
+            </div>
+          `).join('') || '<p class="text-xs text-slate-400">কোনো ওয়েবসাইট যোগ করা হয়নি।</p>';
+
+          document.querySelectorAll('.rot-site-btn').forEach(b => b.addEventListener('click', async () => {
+            await fetch(ORIGIN + '/api/websites', { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'shohojpay-api-key': currentUser.api_key }, body: JSON.stringify({ id: b.getAttribute('data-sid'), regenerate_key: true }) });
+            showToast('নতুন Site Key তৈরি!', 'নতুন API Key সফলভাবে জেনারেট হয়েছে।', false); loadDashboard();
+          }));
+          document.querySelectorAll('.del-site-btn').forEach(b => b.addEventListener('click', async () => {
+            await fetch(ORIGIN + '/api/websites?id=' + encodeURIComponent(b.getAttribute('data-sid')), { method: 'DELETE', headers: { 'shohojpay-api-key': currentUser.api_key } });
+            showToast('ওয়েবসাইট ডিলিট হয়েছে', 'সাইটটি তালিকা থেকে সরানো হয়েছে।', false); loadDashboard();
+          }));
         } catch (e) {}
       }
 
@@ -745,7 +883,7 @@
 
         document.getElementById('saveRealWalletBtn').addEventListener('click', async () => {
           const phone_number = document.getElementById('realWalletNum').value.trim(); if (!phone_number) return;
-          const r = await fetch(ORIGIN + '/api/wallets', { method: 'POST', headers: { 'Content-Type': 'application/json', 'shohojpay-api-key': currentUser.api_key }, body: JSON.stringify({ gateway: document.getElementById('realWalletGw').value, phone_number }) });
+          const r = await fetch(ORIGIN + '/api/wallets', { method: 'POST', headers: { 'Content-Type': 'application/json', 'shohojpay-api-key': currentUser.api_key }, body: JSON.stringify({ gateway: document.getElementById('realWalletGw').value, account_type: document.getElementById('realWalletType').value, phone_number }) });
           if ((await r.json()).status) { document.getElementById('realWalletNum').value = ''; showToast('সেভ হয়েছে!', 'নতুন নাম্বার যুক্ত হয়েছে।', false); loadDashboard(); }
         });
 
@@ -767,6 +905,63 @@
         document.getElementById('copyDevKeyBtn').addEventListener('click', () => copyTxt(document.getElementById('devApiKeyCopyText').textContent, 'API Key'));
         document.getElementById('copyCreatedLinkBtn').addEventListener('click', () => copyTxt(document.getElementById('createdRealLinkHref').textContent, 'Payment Link'));
         document.getElementById('refreshLiveBtn').addEventListener('click', loadDashboard);
+
+        // Wallet Edit Modal Handlers
+        document.getElementById('closeEditWalletBtn').addEventListener('click', () => document.getElementById('editWalletModal').classList.add('hidden'));
+        document.getElementById('cancelEditWalletBtn').addEventListener('click', () => document.getElementById('editWalletModal').classList.add('hidden'));
+        document.getElementById('saveEditWalletBtn').addEventListener('click', async () => {
+          const id = document.getElementById('editWalletId').value;
+          const gateway = document.getElementById('editWalletGw').value;
+          const account_type = document.getElementById('editWalletType').value;
+          const phone_number = document.getElementById('editWalletNum').value.trim();
+          if (!phone_number) return;
+          const r = await fetch(ORIGIN + '/api/wallets', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', 'shohojpay-api-key': currentUser.api_key },
+            body: JSON.stringify({ id, gateway, account_type, phone_number })
+          });
+          if ((await r.json()).status) {
+            document.getElementById('editWalletModal').classList.add('hidden');
+            showToast('আপডেট সম্পন্ন!', 'ওয়ালেট নাম্বার সফলভাবে এডিট হয়েছে।', false);
+            loadDashboard();
+          }
+        });
+
+        // 1-Click Rotate Master API Key!
+        document.getElementById('rotateMasterKeyBtn').addEventListener('click', async () => {
+          const r = await fetch(ORIGIN + '/api/rotate-key', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'shohojpay-api-key': currentUser.api_key }
+          });
+          const d = await r.json();
+          if (d.status && d.merchant) {
+            currentUser = d.merchant;
+            try { localStorage.setItem('sp_merchant_user', JSON.stringify(currentUser)); } catch (e) {}
+            showToast('নতুন API Key তৈরি হয়েছে!', 'পুরোনো Key বাতিল হয়েছে। অ্যাপে নতুন Key বসিয়ে নিন।', false);
+            loadDashboard();
+          } else {
+            showToast('ব্যর্থ', d.message || 'Key পরিবর্তন করা যায়নি।', true);
+          }
+        });
+
+        // Mask / Unmask API Key Toggle
+        let apiMasked = false;
+        document.getElementById('toggleApiKeyMaskBtn').addEventListener('click', () => {
+          apiMasked = !apiMasked;
+          const el = document.getElementById('realApiKeyDisplay');
+          const key = currentUser ? currentUser.api_key : '';
+          el.textContent = apiMasked ? (key.slice(0, 10) + '••••••••••••••••') : key;
+          document.getElementById('toggleApiKeyMaskBtn').textContent = apiMasked ? '👁️ দেখুন' : '👁️ লুকান';
+        });
+
+        // Export Live Invoices CSV
+        document.getElementById('exportLiveCsvBtn').addEventListener('click', () => {
+          const list = window.__liveInvs || [];
+          const rows = [['Invoice','Gateway','TrxID','Amount','Status']].concat(list.map(x => [x.invoice_id, x.gateway||'', x.trx_id||'', x.amount, x.status]));
+          const blob = new Blob([rows.map(r => r.join(',')).join('\n')], { type: 'text/csv' });
+          const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'shohojpay-invoices.csv'; a.click();
+        });
+
       });
     })();
   </script>
