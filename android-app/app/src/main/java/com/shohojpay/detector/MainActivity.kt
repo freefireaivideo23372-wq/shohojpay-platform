@@ -68,7 +68,7 @@ class MainActivity : AppCompatActivity() {
     private fun renderCurrentTab() {
         contentContainer.removeAllViews()
         val hasKey = SmsStorage.getApiKey(this).isNotEmpty()
-        subHeaderText.text = if (hasKey) "● Connected • Auto SMS Sync Ready" else "⚠ Config ট্যাবে গিয়ে আপনার API Key সেভ করুন"
+        subHeaderText.text = if (hasKey) "Connected - Auto SMS Sync Ready" else "Config tab e giye API Key save korun"
 
         when (activeTab) {
             "dashboard" -> renderDashboard()
@@ -90,7 +90,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun renderDashboard() {
-        // Filter Bar: All | Pending | Failed
         val filterRow = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             val lp = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
@@ -117,10 +116,7 @@ class MainActivity : AppCompatActivity() {
         if (logs.isEmpty()) {
             val emptyCard = makeCard()
             emptyCard.addView(TextView(this).apply {
-                text = "এখনো কোনো পেমেন্ট SMS সিঙ্ক হয়নি।
-
-১. Config ট্যাবে গিয়ে আপনার API Key সেভ করুন।
-২. উপরে ↻ SYNC বাটনে ক্লিক করে ইনবক্স সিঙ্ক করুন।"
+                text = "এখনো কোনো পেমেন্ট SMS সিঙ্ক হয়নি। Config ট্যাবে গিয়ে আপনার API Key সেভ করুন এবং উপরে SYNC বাটনে ক্লিক করুন।"
                 setTextColor(Color.parseColor("#475569"))
                 textSize = 14f
             })
@@ -250,7 +246,7 @@ class MainActivity : AppCompatActivity() {
         } else {
             configs.forEach { cfg ->
                 val c = makeCard()
-                c.addView(TextView(this).apply { text = "✓ $cfg"; textSize = 14f; setTypeface(null, Typeface.BOLD); setTextColor(Color.parseColor("#059669")) })
+                c.addView(TextView(this).apply { text = "Active: $cfg"; textSize = 14f; setTypeface(null, Typeface.BOLD); setTextColor(Color.parseColor("#059669")) })
                 contentContainer.addView(c)
             }
         }
@@ -279,8 +275,13 @@ class MainActivity : AppCompatActivity() {
         val successCount = logs.count { it.optString("status") == "Success" }
         val card = makeCard()
         card.addView(TextView(this).apply { text = "Analytics & Insights"; textSize = 18f; setTypeface(null, Typeface.BOLD); setTextColor(Color.parseColor("#0F172A")) })
-        card.addView(TextView(this).apply { text = "
-Total Synced Transactions: $successCount"; textSize = 16f; setTypeface(null, Typeface.BOLD); setTextColor(Color.parseColor("#0284C7")) })
+        card.addView(TextView(this).apply {
+            text = "Total Synced Transactions: $successCount"
+            textSize = 16f
+            setTypeface(null, Typeface.BOLD)
+            setTextColor(Color.parseColor("#0284C7"))
+            setPadding(0, 16, 0, 8)
+        })
         card.addView(TextView(this).apply { text = "Total Captured Messages: ${logs.size}"; textSize = 14f; setTextColor(Color.parseColor("#475569")) })
         contentContainer.addView(card)
     }
@@ -310,7 +311,7 @@ Total Synced Transactions: $successCount"; textSize = 16f; setTypeface(null, Typ
         permCard.addView(TextView(this).apply { text = "Permissions & Background Run"; textSize = 17f; setTypeface(null, Typeface.BOLD); setTextColor(Color.parseColor("#0F172A")) })
         val hasSms = ContextCompat.checkSelfPermission(this, Manifest.permission.RECEIVE_SMS) == PackageManager.PERMISSION_GRANTED
         permCard.addView(TextView(this).apply {
-            text = if (hasSms) "✓ Receive & Read SMS: ALLOWED" else "✕ SMS Permission Denied (Android 13/14/15-এ নিচের বাটন চেপে 'Allow restricted settings' অন করুন)"
+            text = if (hasSms) "Receive & Read SMS: ALLOWED" else "SMS Permission Denied - নিচের বাটন চেপে Allow restricted settings অন করুন"
             setTextColor(if (hasSms) Color.parseColor("#059669") else Color.parseColor("#DC2626"))
             setPadding(0, 12, 0, 16)
         })
