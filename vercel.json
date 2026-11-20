@@ -2,8 +2,8 @@
   "version": 2,
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
-    { "source": "/admin", "destination": "/public/admin.html" },
-    { "source": "/admin/(.*)", "destination": "/public/admin.html" },
-    { "source": "/(.*)", "destination": "/public/index.html" }
+    { "source": "/admin", "destination": "/admin.html" },
+    { "source": "/admin/(.*)", "destination": "/admin.html" },
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
