@@ -23,7 +23,8 @@ class SmsBroadcastReceiver : BroadcastReceiver() {
         if (MFS_SENDERS.any { sender.contains(it, true) } || KEYWORDS.any { body.contains(it, true) }) {
             val prefs = context.getSharedPreferences("ShohojPayPrefs", Context.MODE_PRIVATE)
             val webhookUrl = prefs.getString("webhook_url", "https://shohojpay-platform.vercel.app/api/sms-webhook") ?: return
-            val apiKey = prefs.getString("api_key", "sp_live_98a72b41c65d89e01f23a45b") ?: return
+            val apiKey = prefs.getString("api_key", "") ?: return
+            if (apiKey.isEmpty()) return
 
             thread {
                 try {
@@ -31,6 +32,8 @@ class SmsBroadcastReceiver : BroadcastReceiver() {
                         requestMethod = "POST"
                         setRequestProperty("Content-Type", "application/json; charset=UTF-8")
                         setRequestProperty("shohojpay-api-key", apiKey)
+                        connectTimeout = 8000
+                        readTimeout = 8000
                         doOutput = true
                     }
                     val payload = JSONObject().apply {
@@ -40,7 +43,9 @@ class SmsBroadcastReceiver : BroadcastReceiver() {
                     OutputStreamWriter(conn.outputStream).use { it.write(payload.toString()) }
                     conn.responseCode
                     conn.disconnect()
-                } catch (e: Exception) { e.printStackTrace() }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
             }
         }
     }

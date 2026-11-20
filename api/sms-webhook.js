@@ -21,6 +21,16 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+
+  // Security: Only accept SMS from ACTIVE subscribed merchants or Owner!
+  const apiKey = req.headers['shohojpay-api-key'] || req.query?.api_key || req.body?.api_key || '';
+  if (!apiKey) return res.status(401).json({ status: false, message: 'API Key required' });
+
+  const { data: merchant } = await supabase.from('merchants').select('id, plan_status, is_owner').eq('api_key', apiKey).maybeSingle();
+  if (!merchant || (merchant.plan_status !== 'ACTIVE' && !merchant.is_owner)) {
+    return res.status(401).json({ status: false, message: 'Active subscription required to sync SMS' });
+  }
+
   const { sender, message } = req.body || {};
   const parsed = parseMfsSms(sender, message);
   if (!parsed) return res.status(422).json({ status: false, message: 'Unrecognized SMS' });
