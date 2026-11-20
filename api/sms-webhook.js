@@ -1,20 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY
-);
-
-/**
- * Parses Bangladeshi MFS SMS (bKash, Nagad, Rocket, Upay)
- * Supports BOTH Personal "Send Money" AND Agent "Cash Out" / "Cash In" messages!
- */
 function parseMfsSms(sender = '', message = '') {
   const text = message.trim();
 
-  // 1. bKash (Send Money: "You have received Tk 500.00 from 017... TrxID BK..." OR Agent Cash Out: "Cash Out Tk 500.00 from 017... TrxID BK...")
-  const bkashRegex = /(received|Cash Out|Cash In|Payment)\s+Tk\s*([\d,]+(?:\.\d{1,2})?)\s+from\s+(01\d{9}).*?TrxID\s+([A-Z0-9]+)/i;
-  const bkMatch = text.match(bkashRegex);
+  // 1. bKash (Send Money + Agent Cash Out + Cash In)
+  const bkMatch = text.match(/(received|Cash Out|Cash In|Payment)\s+Tk\s*([\d,]+(?:\.\d{1,2})?)\s+from\s+(01\d{9}).*?TrxID\s+([A-Z0-9]+)/i);
   if (bkMatch) {
     return {
       gateway: 'bKash',
@@ -25,9 +15,8 @@ function parseMfsSms(sender = '', message = '') {
     };
   }
 
-  // 2. Nagad (Send Money: "Money Received. Amount: Tk 500.00. Sender: 018... TxnID: 72N..." OR Cash Out)
-  const nagadRegex = /(Money Received|Cash Out|Cash-Out).*?Amount:\s*Tk\s*([\d,]+(?:\.\d{1,2})?).*?(?:Sender|Customer|From):\s*(01\d{9}).*?(?:TxnID|TrxID):\s*([A-Z0-9]+)/i;
-  const ngMatch = text.match(nagadRegex);
+  // 2. Nagad (Money Received + Cash Out)
+  const ngMatch = text.match(/(Money Received|Cash Out|Cash-Out).*?Amount:\s*Tk\s*([\d,]+(?:\.\d{1,2})?).*?(?:Sender|Customer|From):\s*(01\d{9}).*?(?:TxnID|TrxID):\s*([A-Z0-9]+)/i);
   if (ngMatch) {
     return {
       gateway: 'Nagad',
@@ -38,9 +27,8 @@ function parseMfsSms(sender = '', message = '') {
     };
   }
 
-  // 3. Rocket & Upay (Send Money & Cash Out)
-  const genericRegex = /Tk\.?\s*([\d,]+(?:\.\d{1,2})?).*?(01\d{9,10}).*?(?:TrxID|TxnId)[:\s]+([A-Z0-9]+)/i;
-  const genMatch = text.match(genericRegex);
+  // 3. Rocket & Upay
+  const genMatch = text.match(/Tk\.?\s*([\d,]+(?:\.\d{1,2})?).*?(01\d{9,10}).*?(?:TrxID|TxnId)[:\s]+([A-Z0-9]+)/i);
   if (genMatch) {
     const isUpay = /upay/i.test(sender) || /upay/i.test(text);
     return {
@@ -68,25 +56,15 @@ export default async function handler(req, res) {
     return res.status(401).json({ status: false, message: 'Unauthorized API Key' });
   }
 
+  const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
   const { sender, message } = req.body || {};
   const parsed = parseMfsSms(sender, message);
-  if (!parsed) {
-    return res.status(422).json({ status: false, message: 'Unrecognized MFS SMS format' });
-  }
+  if (!parsed) return res.status(422).json({ status: false, message: 'Unrecognized MFS SMS format' });
 
-  // 1. Check Duplicate TrxID Fraud
-  const { data: existingSms } = await supabase
-    .from('sms_logs')
-    .select('id')
-    .eq('trx_id', parsed.trx_id)
-    .maybeSingle();
+  const { data: existing } = await supabase.from('sms_logs').select('id').eq('trx_id', parsed.trx_id).maybeSingle();
+  if (existing) return res.status(409).json({ status: false, message: 'Duplicate TrxID blocked' });
 
-  if (existingSms) {
-    return res.status(409).json({ status: false, message: 'Duplicate TrxID blocked' });
-  }
-
-  // 2. Find matching PENDING invoice with exact same amount
-  const { data: pendingInvoice } = await supabase
+  const { data: pendingInv } = await supabase
     .from('invoices')
     .select('*')
     .eq('status', 'PENDING')
@@ -96,34 +74,27 @@ export default async function handler(req, res) {
     .maybeSingle();
 
   let matchedInvoiceId = null;
+  if (pendingInv) {
+    matchedInvoiceId = pendingInv.invoice_id;
+    await supabase.from('invoices').update({
+      status: 'APPROVED',
+      gateway: parsed.gateway,
+      payment_type: parsed.payment_type,
+      sender_phone: parsed.sender_phone,
+      trx_id: parsed.trx_id,
+      approved_at: new Date().toISOString()
+    }).eq('id', pendingInv.id);
 
-  if (pendingInvoice) {
-    matchedInvoiceId = pendingInvoice.invoice_id;
-
-    // Mark Invoice APPROVED in Supabase (Triggers Realtime UI update on Checkout Page!)
-    await supabase
-      .from('invoices')
-      .update({
-        status: 'APPROVED',
-        gateway: parsed.gateway,
-        payment_type: parsed.payment_type,
-        sender_phone: parsed.sender_phone,
-        trx_id: parsed.trx_id,
-        approved_at: new Date().toISOString()
-      })
-      .eq('id', pendingInvoice.id);
-
-    // Fire Instant Auto-Approval Webhook to Customer's Website
-    if (pendingInvoice.customer_webhook_url) {
+    if (pendingInv.customer_webhook_url) {
       try {
-        await fetch(pendingInvoice.customer_webhook_url, {
+        await fetch(pendingInv.customer_webhook_url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             event: 'payment.approved',
             status: 'APPROVED',
-            invoice_id: pendingInvoice.invoice_id,
-            order_id: pendingInvoice.order_id,
+            invoice_id: pendingInv.invoice_id,
+            order_id: pendingInv.order_id,
             amount: parsed.amount,
             gateway: parsed.gateway,
             payment_type: parsed.payment_type,
@@ -131,13 +102,10 @@ export default async function handler(req, res) {
             trx_id: parsed.trx_id
           })
         });
-      } catch (err) {
-        console.error('Customer webhook error:', err.message);
-      }
+      } catch (e) {}
     }
   }
 
-  // 3. Save SMS in sms_logs
   await supabase.from('sms_logs').insert([{
     gateway: parsed.gateway,
     payment_type: parsed.payment_type,
@@ -149,10 +117,5 @@ export default async function handler(req, res) {
     matched_invoice_id: matchedInvoiceId
   }]);
 
-  return res.status(200).json({
-    status: true,
-    auto_approved: Boolean(matchedInvoiceId),
-    matched_invoice_id: matchedInvoiceId,
-    parsed
-  });
+  return res.status(200).json({ status: true, auto_approved: Boolean(matchedInvoiceId), matched_invoice_id: matchedInvoiceId, parsed });
 }

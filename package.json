@@ -1,7 +1,7 @@
 {
-  "name": "shohojpay-vercel-supabase",
-  "version": "1.0.0",
-  "description": "ShohojPay Instant MFS Payment Automation (Send Money & Cash Out) built on Supabase & Vercel",
+  "name": "shohojpay-platform",
+  "version": "2.1.0",
+  "description": "ShohojPay Zero-Touch Auto-Configured Payment Automation Platform for GitHub + Supabase + Vercel",
   "private": true,
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0"
