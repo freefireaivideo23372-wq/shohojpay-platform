@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Super Admin Panel — ShohojPay Control Center</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <style>body { font-family: 'Hind Siliguri', sans-serif; }</style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+
+  <div id="adminToast" class="fixed top-5 right-5 z-50 hidden bg-emerald-600 text-white px-4 py-3 rounded-2xl shadow-2xl text-sm font-bold"></div>
+
+  <!-- Admin Login Gate -->
+  <div id="adminLoginScreen" class="min-h-screen flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-md w-full space-y-5 shadow-2xl">
+      <div class="text-center space-y-1">
+        <div class="w-14 h-14 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-2xl mx-auto">🔐</div>
+        <h1 class="text-2xl font-extrabold text-white">ওনার সুপার অ্যাডমিন প্যানেল</h1>
+        <p class="text-xs text-slate-400">শুধুমাত্র ওয়েবসাইটের মালিকের জন্য। অ্যাডমিন পাসওয়ার্ড দিন।</p>
+      </div>
+      <form id="adminLoginForm" class="space-y-4">
+        <input id="adminPinInput" type="password" required placeholder="অ্যাডমিন পাসওয়ার্ড দিন (ডিফল্ট: admin123456)" class="w-full rounded-xl bg-slate-950 border border-slate-700 px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500" />
+        <button type="submit" class="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-sm transition">
+          অ্যাডমিন প্যানেলে প্রবেশ করুন →
+        </button>
+      </form>
+      <a href="/" class="block text-center text-xs text-slate-400 hover:text-white">← মূল ওয়েবসাইটে ফিরে যান</a>
+    </div>
+  </div>
+
+  <!-- Super Admin Dashboard -->
+  <div id="adminDashboard" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+      <div>
+        <span class="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold">👑 SUPER ADMIN CONTROL</span>
+        <h1 class="text-2xl sm:text-3xl font-extrabold mt-1">ওয়েবসাইট ও সাবস্ক্রিপশন কন্ট্রোল সেন্টার</h1>
+      </div>
+      <div class="flex gap-2">
+        <a href="/" target="_blank" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold">🌐 লাইভ সাইট দেখুন</a>
+        <button id="adminLogoutBtn" class="px-4 py-2 rounded-xl bg-rose-500/20 text-rose-300 text-xs font-bold">লগআউট</button>
+      </div>
+    </header>
+
+    <!-- 1. SITE SETTINGS, OWNER PAYMENT NUMBERS & PLAN PRICES -->
+    <section class="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-6">
+      <div>
+        <h2 class="text-xl font-bold text-emerald-400">⚙️ ১. ওয়েবসাইটের নাম, আপনার পেমেন্ট নাম্বার ও প্ল্যানের দাম পরিবর্তন করুন</h2>
+        <p class="text-xs text-slate-400 mt-0.5">এখানে যা লিখে Save করবেন, সাথে সাথে আপনার লাইভ ওয়েবসাইটে বদলে যাবে! কাস্টমাররা সাবস্ক্রিপশন কিনতে নিচে দেওয়া আপনার নাম্বারেই টাকা পাঠাবে।</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">ওয়েবসাইটের নাম (English)</label>
+          <input id="setBrandEn" type="text" class="w-full rounded-xl bg-slate-950 border border-slate-700 px-3.5 py-2.5" />
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">ওয়েবসাইটের নাম (বাংলা)</label>
+          <input id="setBrandBn" type="text" class="w-full rounded-xl bg-slate-950 border border-slate-700 px-3.5 py-2.5" />
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">সাপোর্ট WhatsApp / ফোন</label>
+          <input id="setSupportPhone" type="text" class="w-full rounded-xl bg-slate-950 border border-slate-700 px-3.5 py-2.5" />
+        </div>
+        <div class="md:col-span-2 lg:col-span-3">
+          <label class="block text-xs text-slate-400 mb-1">হোম পেজের মেইন হেডলাইন (Hero Title)</label>
+          <input id="setHeroTitle" type="text" class="w-full rounded-xl bg-slate-950 border border-slate-700 px-3.5 py-2.5" />
+        </div>
+        <div class="md:col-span-2 lg:col-span-3">
+          <label class="block text-xs text-slate-400 mb-1">Android App ডাউনলোড লিংক (APK URL)</label>
+          <input id="setApkUrl" type="text" class="w-full rounded-xl bg-slate-950 border border-slate-700 px-3.5 py-2.5 font-mono text-xs" />
+        </div>
+
+        <!-- Owner's Own Receiving Numbers for Auto Subscription -->
+        <div>
+          <label class="block text-xs text-pink-400 font-bold mb-1">আপনার bKash নাম্বার (সাবস্ক্রিপশন রিসিভ)</label>
+          <input id="setOwnerBkash" type="text" class="w-full rounded-xl bg-slate-950 border border-pink-500/40 px-3.5 py-2.5 font-mono" />
+        </div>
+        <div>
+          <label class="block text-xs text-orange-400 font-bold mb-1">আপনার Nagad নাম্বার (সাবস্ক্রিপশন রিসিভ)</label>
+          <input id="setOwnerNagad" type="text" class="w-full rounded-xl bg-slate-950 border border-orange-500/40 px-3.5 py-2.5 font-mono" />
+        </div>
+        <div>
+          <label class="block text-xs text-purple-400 font-bold mb-1">আপনার Rocket নাম্বার (সাবস্ক্রিপশন রিসিভ)</label>
+          <input id="setOwnerRocket" type="text" class="w-full rounded-xl bg-slate-950 border border-purple-500/40 px-3.5 py-2.5 font-mono" />
+        </div>
+
+        <!-- Dynamic Prices -->
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Starter (১ মাস - টাকা)</label>
+          <input id="setPStarterM" type="number" class="w-full rounded-xl bg-slate-950 border border-slate-700 px-3.5 py-2.5" />
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Starter (১ বছর - টাকা)</label>
+          <input id="setPStarterY" type="number" class="w-full rounded-xl bg-slate-950 border border-slate-700 px-3.5 py-2.5" />
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Business Pro (১ মাস - টাকা)</label>
+          <input id="setPProM" type="number" class="w-full rounded-xl bg-slate-950 border border-slate-700 px-3.5 py-2.5" />
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Business Pro (১ বছর - টাকা)</label>
+          <input id="setPProY" type="number" class="w-full rounded-xl bg-slate-950 border border-slate-700 px-3.5 py-2.5" />
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Lifetime (আজীবন - টাকা)</label>
+          <input id="setPLifetime" type="number" class="w-full rounded-xl bg-slate-950 border border-slate-700 px-3.5 py-2.5" />
+        </div>
+      </div>
+
+      <button id="saveSettingsBtn" class="px-6 py-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-sm transition">
+        ✓ সব পরিবর্তন লাইভ ওয়েবসাইটে সেভ করুন
+      </button>
+    </section>
+
+    <!-- 2. GRANT UNLIMITED OWNER / VIP ACCESS BY EMAIL -->
+    <section class="bg-slate-900 border border-indigo-500/40 rounded-3xl p-6 space-y-4">
+      <div>
+        <h2 class="text-xl font-bold text-indigo-400">👑 ২. আপনার নিজের ইমেইলে আনলিমিটেড ফ্রি এক্সেস (Owner VIP) দিন</h2>
+        <p class="text-xs text-slate-400 mt-0.5">আগে মূল ওয়েবসাইটে আপনার Gmail দিয়ে একটি একাউন্ট খুলুন, তারপর এখানে ওই ইমেইল বসিয়ে ক্লিক করলেই আপনার একাউন্টে **আজীবন ফ্রি আনলিমিটেড ওয়েবসাইট এক্সেস** চালু হয়ে যাবে!</p>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-3">
+        <input id="vipEmailInput" type="email" placeholder="আপনার নিজের Gmail লিখুন (যেমন: yourname@gmail.com)" class="flex-1 rounded-xl bg-slate-950 border border-slate-700 px-4 py-3 text-sm" />
+        <button id="grantVipBtn" class="px-6 py-3 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white font-extrabold text-sm shrink-0">
+          👑 আনলিমিটেড ওনার এক্সেস চালু করুন
+        </button>
+      </div>
+    </section>
+
+    <!-- 3. ALL REGISTERED MERCHANTS & SUBSCRIPTIONS -->
+    <section class="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4">
+      <h2 class="text-xl font-bold text-white">👥 ৩. সব কাস্টমার ও সাবস্ক্রিপশন লিস্ট</h2>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-xs sm:text-sm">
+          <thead>
+            <tr class="border-b border-slate-800 text-slate-400 text-xs">
+              <th class="py-3 px-2">শপ ও ইমেইল</th>
+              <th class="py-3 px-2">প্ল্যান</th>
+              <th class="py-3 px-2">স্ট্যাটাস</th>
+              <th class="py-3 px-2">কুইক অ্যাকশন</th>
+            </tr>
+          </thead>
+          <tbody id="adminMerchantsBody" class="divide-y divide-slate-800"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 4. LIVE SMS LOGS RECEIVED ON OWNER'S PHONE -->
+    <section class="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4">
+      <h2 class="text-xl font-bold text-white">📲 ৪. আপনার ফোনে আসা লাইভ পেমেন্ট SMS লগ</h2>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-xs sm:text-sm">
+          <thead>
+            <tr class="border-b border-slate-800 text-slate-400 text-xs">
+              <th class="py-3 px-2">ওয়ালেট ও ধরন</th>
+              <th class="py-3 px-2">TrxID</th>
+              <th class="py-3 px-2">টাকা</th>
+              <th class="py-3 px-2">ব্যবহৃত?</th>
+            </tr>
+          </thead>
+          <tbody id="adminSmsBody" class="divide-y divide-slate-800"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    (function() {
+      let adminPin = '';
+      try { adminPin = sessionStorage.getItem('sp_admin_pin') || ''; } catch (e) {}
+
+      function toast(msg, err) {
+        const t = document.getElementById('adminToast');
+        t.textContent = msg;
+        t.className = 'fixed top-5 right-5 z-50 px-4 py-3 rounded-2xl shadow-2xl text-sm font-bold ' + (err ? 'bg-rose-600 text-white' : 'bg-emerald-600 text-white');
+        setTimeout(() => t.classList.add('hidden'), 3500);
+      }
+
+      async function loadAdminData() {
+        const res = await fetch('/api/admin', { headers: { 'x-admin-pin': adminPin } });
+        const data = await res.json();
+        if (!data.status) {
+          adminPin = '';
+          toast(data.message || 'ভুল পাসওয়ার্ড!', true);
+          return false;
+        }
+        try { sessionStorage.setItem('sp_admin_pin', adminPin); } catch (e) {}
+        document.getElementById('adminLoginScreen').classList.add('hidden');
+        document.getElementById('adminDashboard').classList.remove('hidden');
+
+        const s = data.settings || {};
+        document.getElementById('setBrandEn').value = s.brand_name_en || 'ShohojPay';
+        document.getElementById('setBrandBn').value = s.brand_name_bn || 'সহজপে';
+        document.getElementById('setSupportPhone').value = s.support_phone || '+880 1700-000000';
+        document.getElementById('setHeroTitle').value = s.hero_title || '';
+        document.getElementById('setApkUrl').value = s.apk_download_url || '';
+        document.getElementById('setOwnerBkash').value = s.owner_bkash || '';
+        document.getElementById('setOwnerNagad').value = s.owner_nagad || '';
+        document.getElementById('setOwnerRocket').value = s.owner_rocket || '';
+        document.getElementById('setPStarterM').value = s.price_starter_month || 49;
+        document.getElementById('setPStarterY').value = s.price_starter_year || 399;
+        document.getElementById('setPProM').value = s.price_pro_month || 99;
+        document.getElementById('setPProY').value = s.price_pro_year || 799;
+        document.getElementById('setPLifetime').value = s.price_lifetime || 1499;
+
+        // Merchants Table
+        const mb = document.getElementById('adminMerchantsBody');
+        mb.innerHTML = (data.merchants || []).map(m => `
+          <tr>
+            <td class="py-3 px-2"><div class="font-bold text-white">${m.brand_name}</div><div class="text-xs text-slate-400">${m.email}</div></td>
+            <td class="py-3 px-2 text-xs">${m.plan_name || 'None'} ${m.is_owner ? '👑' : ''}</td>
+            <td class="py-3 px-2"><span class="px-2 py-0.5 rounded-full text-xs font-bold ${m.plan_status === 'ACTIVE' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'}">${m.plan_status}</span></td>
+            <td class="py-3 px-2 space-x-1">
+              <button data-email="${m.email}" data-days="30" class="act-user-btn px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-xs font-bold">১ মাস চালু</button>
+              <button data-email="${m.email}" data-days="365" class="act-user-btn px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-xs font-bold">১ বছর চালু</button>
+              <button data-email="${m.email}" data-stop="1" class="stop-user-btn px-2.5 py-1 rounded-lg bg-rose-600/80 text-white text-xs font-bold">বন্ধ</button>
+            </td>
+          </tr>
+        `).join('') || '<tr><td colspan="4" class="py-4 text-center text-slate-500">কোনো ইউজার নেই।</td></tr>';
+
+        document.querySelectorAll('.act-user-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const days = Number(btn.getAttribute('data-days'));
+            await updateMerchant(btn.getAttribute('data-email'), days === 365 ? 'Business Pro (1 Year)' : 'Business Pro (1 Month)', 'ACTIVE', false, days);
+          });
+        });
+        document.querySelectorAll('.stop-user-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            await updateMerchant(btn.getAttribute('data-email'), 'Suspended', 'INACTIVE', false, 0);
+          });
+        });
+
+        // SMS Logs
+        document.getElementById('adminSmsBody').innerHTML = (data.sms_logs || []).map(x => `
+          <tr>
+            <td class="py-2.5 px-2 font-bold">${x.gateway} (${x.payment_type})</td>
+            <td class="py-2.5 px-2 font-mono text-emerald-400">${x.trx_id}</td>
+            <td class="py-2.5 px-2 font-bold">৳${x.amount}</td>
+            <td class="py-2.5 px-2 text-xs">${x.is_used ? '✓ Used' : 'Available'}</td>
+          </tr>
+        `).join('') || '<tr><td colspan="4" class="py-4 text-center text-slate-500">এখনো কোনো SMS আসেনি।</td></tr>';
+
+        return true;
+      }
+
+      async function updateMerchant(email, plan_name, plan_status, is_owner, days) {
+        const res = await fetch('/api/admin', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-admin-pin': adminPin },
+          body: JSON.stringify({ action: 'update_merchant', email, plan_name, plan_status, is_owner, days })
+        });
+        const d = await res.json();
+        toast(d.message, !d.status);
+        if (d.status) loadAdminData();
+      }
+
+      document.getElementById('adminLoginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        adminPin = document.getElementById('adminPinInput').value.trim();
+        await loadAdminData();
+      });
+
+      document.getElementById('saveSettingsBtn').addEventListener('click', async () => {
+        const settings = {
+          brand_name_en: document.getElementById('setBrandEn').value.trim(),
+          brand_name_bn: document.getElementById('setBrandBn').value.trim(),
+          support_phone: document.getElementById('setSupportPhone').value.trim(),
+          hero_title: document.getElementById('setHeroTitle').value.trim(),
+          apk_download_url: document.getElementById('setApkUrl').value.trim(),
+          owner_bkash: document.getElementById('setOwnerBkash').value.trim(),
+          owner_nagad: document.getElementById('setOwnerNagad').value.trim(),
+          owner_rocket: document.getElementById('setOwnerRocket').value.trim(),
+          price_starter_month: document.getElementById('setPStarterM').value,
+          price_starter_year: document.getElementById('setPStarterY').value,
+          price_pro_month: document.getElementById('setPProM').value,
+          price_pro_year: document.getElementById('setPProY').value,
+          price_lifetime: document.getElementById('setPLifetime').value
+        };
+        const res = await fetch('/api/admin', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-admin-pin': adminPin },
+          body: JSON.stringify({ action: 'update_settings', settings })
+        });
+        const d = await res.json();
+        toast(d.message, !d.status);
+      });
+
+      document.getElementById('grantVipBtn').addEventListener('click', async () => {
+        const email = document.getElementById('vipEmailInput').value.trim();
+        if (!email) { toast('ইমেইল লিখুন!', true); return; }
+        await updateMerchant(email, 'Owner Unlimited VIP', 'ACTIVE', true, 36500);
+      });
+
+      document.getElementById('adminLogoutBtn').addEventListener('click', () => {
+        try { sessionStorage.removeItem('sp_admin_pin'); } catch (e) {}
+        location.reload();
+      });
+
+      if (adminPin) loadAdminData();
+    })();
+  </script>
+</body>
+</html>
