@@ -27,7 +27,7 @@ export default async function handler(req, res) {
     return res.status(401).json({ status: false, message: 'Active subscription & valid API key required' });
   }
 
-  const { amount, order_id, customer_name, webhook_url, redirect_url } = req.body || {};
+  const { amount, order_id, customer_name, webhook_url, redirect_url, cancel_url } = req.body || {};
   if (!amount || Number(amount) <= 0) return res.status(400).json({ status: false, message: 'Valid amount required' });
 
   const invoiceId = 'INV_' + Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -43,5 +43,11 @@ export default async function handler(req, res) {
 
   if (error) return res.status(500).json({ status: false, message: error.message });
   const host = req.headers.host ? `https://${req.headers.host}` : 'https://shohojpay-platform.vercel.app';
-  return res.status(200).json({ status: true, invoice_id: invoiceId, payment_url: `${host}/?invoice=${invoiceId}&amount=${amount}`, data });
+  const cancelParam = cancel_url ? `&cancel_url=${encodeURIComponent(cancel_url)}` : '';
+  return res.status(200).json({
+    status: true,
+    invoice_id: invoiceId,
+    payment_url: `${host}/pay?invoice=${invoiceId}&amount=${amount}${cancelParam}`,
+    data
+  });
 }

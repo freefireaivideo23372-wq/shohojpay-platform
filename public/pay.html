@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ShohojPay — Secure Payment Checkout</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@500;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Hind Siliguri', 'Inter', sans-serif; background: #EEF2F6; -webkit-font-smoothing: antialiased; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    @keyframes spinSlow { to { transform: rotate(360deg); } }
+    .spin-slow { animation: spinSlow 1.1s linear infinite; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-up { animation: fadeUp 0.25s ease-out forwards; }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-3 sm:p-5 text-slate-900">
+
+  <!-- Toast -->
+  <div id="toast" class="fixed top-4 right-4 left-4 sm:left-auto sm:max-w-xs z-50 hidden bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-2xl text-xs font-bold flex items-center gap-2.5">
+    <span id="toastDot" class="w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0"></span>
+    <span id="toastTxt"></span>
+  </div>
+
+  <!-- Cancel Confirmation Modal (Just like ZiniPay!) -->
+  <div id="cancelModal" class="fixed inset-0 z-50 hidden bg-slate-950/55 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl space-y-4 fade-up">
+      <div class="w-14 h-14 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center text-2xl mx-auto font-extrabold">!</div>
+      <div>
+        <h3 class="text-lg font-extrabold text-slate-900">পেমেন্ট বাতিল করবেন?</h3>
+        <p class="text-xs text-slate-500 mt-1">আপনি কি নিশ্চিতভাবে এই ইনভয়েসটি Cancel করে আগের ওয়েবসাইটে ফিরে যেতে চান?</p>
+      </div>
+      <div class="grid grid-cols-2 gap-2.5 pt-1">
+        <button id="cancelGoBackBtn" class="py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm">ফিরে যান</button>
+        <button id="cancelConfirmBtn" class="py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm">হ্যাঁ, Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN CHECKOUT CARD (Zero Website Navbar Clutter — Pure Stripe/ZiniPay Grade!) -->
+  <div id="checkoutCard" class="w-full max-w-[430px] bg-white rounded-[28px] shadow-[0_20px_60px_-15px_rgba(15,23,42,0.16)] overflow-hidden border border-slate-200/80 fade-up">
+
+    <!-- Top Dark/Branded Header Bar -->
+    <div id="topBar" class="bg-[#0F172A] text-white px-5 py-3.5 flex items-center justify-between transition-colors duration-200">
+      <button id="backBtn" class="w-8 h-8 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center text-sm font-bold transition" title="Back">←</button>
+      <div class="flex items-center gap-2">
+        <span class="w-6 h-6 rounded-lg bg-emerald-500 text-slate-950 flex items-center justify-center text-xs font-extrabold">⚡</span>
+        <span id="brandTitleTop" class="font-extrabold text-sm tracking-wide">ShohojPay</span>
+      </div>
+      <button id="closeCancelBtn" class="w-8 h-8 rounded-full bg-white/15 hover:bg-rose-500/80 flex items-center justify-center text-sm font-bold transition" title="Cancel Payment">✕</button>
+    </div>
+
+    <!-- Merchant Info & Live Timer Strip -->
+    <div id="summaryStrip" class="px-5 pt-4 pb-3 border-b border-slate-100 space-y-3">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center font-extrabold text-lg">⚡</div>
+          <div>
+            <div id="merchantLabel" class="font-extrabold text-base text-slate-900 leading-tight">ShohojPay Secure</div>
+            <button id="toggleDetailsBtn" class="text-xs font-semibold text-sky-600 hover:underline mt-0.5">View Details ▾</button>
+          </div>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <a id="supportWaBtn" href="https://wa.me/8801773895998" target="_blank" class="w-9 h-9 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm border border-emerald-200" title="WhatsApp Support">💬</a>
+          <a id="supportCallBtn" href="tel:01773895998" class="w-9 h-9 rounded-full bg-sky-50 text-sky-600 flex items-center justify-center text-sm border border-sky-200" title="Call Support">📞</a>
+        </div>
+      </div>
+
+      <!-- Expandable Order Details -->
+      <div id="orderDetailsBox" class="hidden rounded-xl bg-slate-50 border border-slate-200/80 p-3 text-xs space-y-1 text-slate-600">
+        <div class="flex justify-between"><span>Invoice ID:</span><strong id="detInvId" class="mono text-slate-900"></strong></div>
+        <div class="flex justify-between"><span>Total Payable:</span><strong id="detAmt" class="text-emerald-600"></strong></div>
+        <div class="flex justify-between"><span>Gateway Fee:</span><strong class="text-emerald-600">৳0.00 (Free)</strong></div>
+      </div>
+
+      <!-- Live Ticking Countdown Box -->
+      <div class="rounded-2xl bg-slate-50 border border-slate-200/80 px-3.5 py-2.5 flex items-center justify-between">
+        <div>
+          <div class="text-[11px] font-bold text-rose-600 flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+            <span>Expires in <span id="liveTimer" class="mono font-extrabold">10:00</span></span>
+          </div>
+          <div id="orderIdLine" class="text-[11px] mono text-slate-500 mt-0.5">Order: #INV</div>
+        </div>
+        <div class="text-right">
+          <div class="text-[10px] text-slate-400 font-semibold uppercase">Payable</div>
+          <div id="amountTopShow" class="text-xl font-extrabold text-slate-900">৳0.00</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================
+         STEP 1: CRISP MOBILE BANKING WALLET PICKER
+         ====================================================== -->
+    <div id="step1" class="p-5 space-y-4">
+      <div class="bg-[#0F172A] text-white text-center py-2.5 rounded-xl font-bold text-xs tracking-wide uppercase">
+        Mobile Banking (Send Money • Auto Verify)
+      </div>
+
+      <div id="walletGrid" class="grid grid-cols-2 gap-3">
+        <!-- Populated instantly -->
+      </div>
+
+      <button id="step1ContinueBtn" class="w-full py-3.5 rounded-2xl bg-sky-600 hover:bg-sky-700 text-white font-extrabold text-sm shadow-lg shadow-sky-600/20 transition">
+        Pay <span id="btnAmtSpan">৳0.00</span> BDT →
+      </button>
+
+      <div class="text-center">
+        <button id="cancelTextLink" class="text-xs font-semibold text-slate-400 hover:text-rose-600 underline">Cancel payment</button>
+      </div>
+    </div>
+
+    <!-- ======================================================
+         STEP 2: VIBRANT BRANDED PAYMENT SCREEN (bKash / Nagad / Rocket / Upay)
+         ====================================================== -->
+    <div id="step2" class="hidden">
+      <!-- Wallet Brand Strip -->
+      <div class="px-5 py-3 bg-white flex items-center justify-between border-b border-slate-100">
+        <div class="flex items-center gap-2.5">
+          <span id="selWalletBadge" class="px-3 py-1 rounded-xl font-extrabold text-sm text-white bg-[#E2136E]">bKash</span>
+          <span class="text-xs font-bold text-slate-500">Personal Send Money</span>
+        </div>
+        <div id="step2AmtShow" class="text-lg font-extrabold text-slate-900">৳0.00</div>
+      </div>
+
+      <!-- Vibrant Colored Main Panel -->
+      <div id="brandPanel" class="bg-[#E2136E] text-white p-5 space-y-4 transition-colors duration-200">
+
+        <!-- Copyable Personal Number Card -->
+        <div class="bg-black/20 rounded-2xl p-4 flex items-center justify-between gap-2 border border-white/15">
+          <div>
+            <div class="text-[10px] font-bold uppercase tracking-wider opacity-90">এই নাম্বারে <span id="payTypeTxt">Send Money</span> করুন:</div>
+            <div id="receiverPhoneShow" class="text-2xl mono font-extrabold tracking-wide mt-0.5">01773895998</div>
+          </div>
+          <button id="copyPhoneBtn" class="px-3.5 py-2.5 rounded-xl bg-white text-slate-900 hover:bg-slate-100 font-extrabold text-xs shrink-0 shadow transition">
+            📋 কপি করুন
+          </button>
+        </div>
+
+        <!-- App vs Dial (*247# / *167# / *322#) Toggle Instructions -->
+        <div class="bg-black/15 rounded-2xl p-3.5 space-y-2.5 border border-white/10">
+          <div class="grid grid-cols-2 gap-1 bg-black/20 p-1 rounded-xl text-[11px] font-bold">
+            <button id="guideAppTab" class="py-1.5 rounded-lg bg-white text-slate-900">📱 অ্যাপ দিয়ে পেমেন্ট</button>
+            <button id="guideDialTab" class="py-1.5 rounded-lg text-white/90">📞 ডায়াল করে (<span id="dialCodeLabel">*247#</span>)</button>
+          </div>
+          <ol id="guideStepsList" class="text-xs space-y-1.5 leading-relaxed opacity-95 pl-1">
+            <!-- Dynamic steps -->
+          </ol>
+        </div>
+
+        <!-- Dual Verification: TrxID Input + Auto-Verify Polling -->
+        <div class="space-y-2">
+          <label class="block text-xs font-bold">টাকা পাঠানোর পর আপনার TrxID দিন (অথবা অপেক্ষা করুন — অটো ভেরিফাই হবে):</label>
+          <input id="trxInput" type="text" placeholder="যেমন: BK98X72M1P (PIN বা OTP লাগবে না)" class="w-full rounded-xl bg-white text-slate-900 px-4 py-3.5 text-sm mono font-bold uppercase placeholder:font-sans placeholder:font-normal placeholder:text-slate-400 focus:outline-none shadow-inner" />
+        </div>
+
+        <!-- Live Auto-Verifying Status Bar -->
+        <div id="autoVerifyBar" class="bg-black/20 rounded-xl px-3.5 py-2.5 flex items-center justify-between text-xs font-bold">
+          <div class="flex items-center gap-2">
+            <span class="w-4 h-4 rounded-full border-2 border-white/30 border-t-white spin-slow inline-block"></span>
+            <span>আপনার পেমেন্টের জন্য অপেক্ষা করছি...</span>
+          </div>
+          <span class="text-[10px] opacity-85">Auto Verify</span>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="grid grid-cols-3 gap-2 pt-1">
+          <button id="step2CancelBtn" class="py-3.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold text-xs">Cancel</button>
+          <button id="verifyBtn" class="col-span-2 py-3.5 rounded-xl bg-slate-950 hover:bg-slate-900 text-white font-extrabold text-sm shadow-lg transition">
+            ✓ ভেরিফাই করুন (Verify)
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================
+         STEP 3: SUCCESS OR CANCELED STATE WITH AUTO-REDIRECT
+         ====================================================== -->
+    <div id="stepFinal" class="hidden p-8 text-center space-y-4 fade-up">
+      <div id="finalIcon" class="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-3xl mx-auto font-extrabold">✓</div>
+      <h2 id="finalTitle" class="text-2xl font-extrabold text-slate-900">পেমেন্ট সফল হয়েছে!</h2>
+      <p id="finalDesc" class="text-sm text-slate-600">আপনার অর্ডার কনফার্ম হয়েছে। ৩ সেকেন্ডের মধ্যে ওয়েবসাইটে নিয়ে যাওয়া হচ্ছে...</p>
+      <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+        <div id="finalProgress" class="h-full bg-emerald-500 transition-all duration-[2500ms] w-0"></div>
+      </div>
+      <button id="manualReturnBtn" class="px-5 py-2.5 rounded-xl bg-slate-900 text-white text-xs font-bold">এখনই ফিরে যান →</button>
+    </div>
+
+  </div>
+
+  <script>
+    (function() {
+      const ORIGIN = window.location.origin;
+      const params = new URLSearchParams(window.location.search);
+      const invId = params.get('invoice') || 'INV_DEMO';
+      let amount = params.get('amount') || '0';
+      let redirectUrl = params.get('redirect_url') || '';
+      let cancelUrl = params.get('cancel_url') || document.referrer || '';
+      let wallets = [
+        { gateway: 'bKash', phone_number: '01773895998', account_type: 'Personal (Send Money)' },
+        { gateway: 'Nagad', phone_number: '01773895998', account_type: 'Personal (Send Money)' },
+        { gateway: 'Rocket', phone_number: '01773895998', account_type: 'Personal (Send Money)' }
+      ];
+      let selectedWallet = null;
+      let guideMode = 'app';
+      let pollHandle = null;
+      let timerHandle = null;
+      let secondsLeft = 600; // 10 minutes
+
+      const themes = {
+        bKash:  { bg: 'bg-[#E2136E]', hex: '#E2136E', bn: 'বিকাশ', dial: '*247#', badge: 'bg-[#E2136E]' },
+        Nagad:  { bg: 'bg-[#F7941D]', hex: '#F7941D', bn: 'নগদ',   dial: '*167#', badge: 'bg-[#F7941D]' },
+        Rocket: { bg: 'bg-[#8C3494]', hex: '#8C3494', bn: 'রকেট',  dial: '*322#', badge: 'bg-[#8C3494]' },
+        Upay:   { bg: 'bg-[#005B96]', hex: '#005B96', bn: 'উপায়',  dial: '*268#', badge: 'bg-[#005B96]' }
+      };
+
+      function toast(msg, isErr) {
+        const el = document.getElementById('toast');
+        document.getElementById('toastTxt').textContent = msg;
+        document.getElementById('toastDot').className = 'w-2.5 h-2.5 rounded-full shrink-0 ' + (isErr ? 'bg-rose-400' : 'bg-emerald-400');
+        el.classList.remove('hidden');
+        setTimeout(() => el.classList.add('hidden'), 3000);
+      }
+
+      // Live Countdown Timer (Works immediately on load!)
+      function startCountdown() {
+        if (timerHandle) clearInterval(timerHandle);
+        timerHandle = setInterval(() => {
+          if (secondsLeft > 0) secondsLeft--;
+          const m = String(Math.floor(secondsLeft / 60)).padStart(2, '0');
+          const s = String(secondsLeft % 60).padStart(2, '0');
+          document.getElementById('liveTimer').textContent = m + ':' + s;
+          if (secondsLeft === 0) {
+            clearInterval(timerHandle);
+            if (pollHandle) clearInterval(pollHandle);
+            showFinalScreen(false, 'সময় শেষ হয়েছে (Session Expired)', 'দয়া করে ওয়েবসাইটে ফিরে গিয়ে আবার পেমেন্ট শুরু করুন।', cancelUrl || redirectUrl);
+          }
+        }, 1000);
+      }
+
+      function renderAmountUI() {
+        const fmt = '৳' + Number(amount || 0).toFixed(2);
+        document.getElementById('orderIdLine').textContent = 'Order: ' + invId;
+        document.getElementById('detInvId').textContent = invId;
+        document.getElementById('detAmt').textContent = fmt;
+        document.getElementById('amountTopShow').textContent = fmt;
+        document.getElementById('btnAmtSpan').textContent = fmt;
+        document.getElementById('step2AmtShow').textContent = fmt;
+      }
+
+      function renderWalletGrid() {
+        const grid = document.getElementById('walletGrid');
+        grid.innerHTML = wallets.map((w, i) => {
+          const t = themes[w.gateway] || themes.bKash;
+          const isSel = selectedWallet && selectedWallet.gateway === w.gateway;
+          return `
+            <button data-idx="${i}" class="wallet-card p-4 rounded-2xl border-2 ${isSel ? 'border-sky-600 bg-sky-50/70' : 'border-slate-200 hover:border-slate-300 bg-white'} flex flex-col items-center justify-center gap-1.5 transition shadow-xs">
+              <div class="w-11 h-11 rounded-2xl ${t.badge} text-white font-extrabold text-sm flex items-center justify-center shadow-sm">${t.bn}</div>
+              <div class="font-extrabold text-sm text-slate-900">${w.gateway}</div>
+              <div class="text-[10px] font-semibold text-slate-400">Personal • 0% Fee</div>
+            </button>
+          `;
+        }).join('');
+
+        document.querySelectorAll('.wallet-card').forEach(btn => {
+          btn.addEventListener('click', () => {
+            selectedWallet = wallets[Number(btn.getAttribute('data-idx'))];
+            openStep2();
+          });
+        });
+      }
+
+      function renderGuideSteps() {
+        if (!selectedWallet) return;
+        const t = themes[selectedWallet.gateway] || themes.bKash;
+        const num = selectedWallet.phone_number;
+        const amt = Number(amount || 0);
+        document.getElementById('dialCodeLabel').textContent = t.dial;
+
+        const list = document.getElementById('guideStepsList');
+        if (guideMode === 'app') {
+          document.getElementById('guideAppTab').className = 'py-1.5 rounded-lg bg-white text-slate-900';
+          document.getElementById('guideDialTab').className = 'py-1.5 rounded-lg text-white/90';
+          list.innerHTML = `
+            <li><strong>১.</strong> উপরের নাম্বার (<strong>${num}</strong>) কপি করুন।</li>
+            <li><strong>২.</strong> আপনার <strong>${t.bn} (${selectedWallet.gateway})</strong> অ্যাপে ঢুকে <strong>Send Money</strong> অপশনে যান।</li>
+            <li><strong>৩.</strong> ঠিক <strong>৳${amt}</strong> পাঠান — টাকা পাঠালেই অটো ভেরিফাই হবে অথবা নিচে <strong>TrxID</strong> দিয়ে Verify চাপুন!</li>
+          `;
+        } else {
+          document.getElementById('guideDialTab').className = 'py-1.5 rounded-lg bg-white text-slate-900';
+          document.getElementById('guideAppTab').className = 'py-1.5 rounded-lg text-white/90';
+          list.innerHTML = `
+            <li><strong>১.</strong> আপনার ফোন থেকে <strong>${t.dial}</strong> ডায়াল করুন।</li>
+            <li><strong>২.</strong> <strong>Send Money</strong> বেছে নিয়ে <strong>${num}</strong> নাম্বারে ঠিক <strong>৳${amt}</strong> পাঠান।</li>
+            <li><strong>৩.</strong> ফিরতি SMS-এ আসা <strong>TrxID</strong> নিচে বসিয়ে Verify চাপুন (অথবা ১০ সেকেন্ড অপেক্ষা করুন)!</li>
+          `;
+        }
+      }
+
+      function openStep2() {
+        if (!selectedWallet) selectedWallet = wallets[0];
+        const t = themes[selectedWallet.gateway] || themes.bKash;
+        document.getElementById('step1').classList.add('hidden');
+        document.getElementById('step2').classList.remove('hidden');
+        document.getElementById('topBar').className = `${t.bg} text-white px-5 py-3.5 flex items-center justify-between transition-colors duration-200`;
+        document.getElementById('brandPanel').className = `${t.bg} text-white p-5 space-y-4 transition-colors duration-200`;
+        document.getElementById('selWalletBadge').className = `px-3 py-1 rounded-xl font-extrabold text-sm text-white ${t.badge}`;
+        document.getElementById('selWalletBadge').textContent = `${t.bn} • ${selectedWallet.gateway}`;
+        document.getElementById('receiverPhoneShow').textContent = selectedWallet.phone_number;
+        renderGuideSteps();
+      }
+
+      function goBackToStep1() {
+        document.getElementById('step2').classList.add('hidden');
+        document.getElementById('step1').classList.remove('hidden');
+        document.getElementById('topBar').className = 'bg-[#0F172A] text-white px-5 py-3.5 flex items-center justify-between transition-colors duration-200';
+      }
+
+      function showFinalScreen(isSuccess, title, desc, targetUrl) {
+        if (pollHandle) clearInterval(pollHandle);
+        if (timerHandle) clearInterval(timerHandle);
+        document.getElementById('step1').classList.add('hidden');
+        document.getElementById('step2').classList.add('hidden');
+        document.getElementById('summaryStrip').classList.add('hidden');
+        document.getElementById('stepFinal').classList.remove('hidden');
+
+        const icon = document.getElementById('finalIcon');
+        const bar = document.getElementById('finalProgress');
+        if (isSuccess) {
+          icon.className = 'w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-3xl mx-auto font-extrabold';
+          icon.textContent = '✓';
+          bar.className = 'h-full bg-emerald-500 transition-all duration-[2500ms] w-full';
+        } else {
+          icon.className = 'w-16 h-16 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center text-3xl mx-auto font-extrabold';
+          icon.textContent = '✕';
+          bar.className = 'h-full bg-rose-500 transition-all duration-[2500ms] w-full';
+        }
+        document.getElementById('finalTitle').textContent = title;
+        document.getElementById('finalDesc').textContent = desc;
+        setTimeout(() => { bar.style.width = '100%'; }, 50);
+
+        const safeTarget = targetUrl || (document.referrer && !document.referrer.includes(window.location.host) ? document.referrer : '');
+        const doRedirect = () => {
+          if (safeTarget) {
+            window.location.href = safeTarget;
+          } else if (window.history.length > 1) {
+            window.history.back();
+          } else {
+            window.location.href = '/';
+          }
+        };
+        document.getElementById('manualReturnBtn').onclick = doRedirect;
+        setTimeout(doRedirect, 2600);
+      }
+
+      async function verifyNow(trxId) {
+        try {
+          const r = await fetch(ORIGIN + '/api/verify-payment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ invoice_id: invId, trx_id: trxId || undefined })
+          });
+          const d = await r.json();
+          if (d.invoice && d.invoice.customer_redirect_url) redirectUrl = d.invoice.customer_redirect_url;
+
+          if (d.payment_status === 'APPROVED') {
+            let finalUrl = redirectUrl;
+            if (finalUrl) {
+              const sep = finalUrl.includes('?') ? '&' : '?';
+              finalUrl += `${sep}status=approved&invoice_id=${encodeURIComponent(invId)}&trx_id=${encodeURIComponent(d.invoice?.trx_id || trxId || '')}`;
+            }
+            showFinalScreen(true, 'পেমেন্ট সফলভাবে ভেরিফাই হয়েছে!', 'আপনার এক্সেস আনলক হচ্ছে — ৩ সেকেন্ডে ওয়েবসাইটে ফিরে যাওয়া হবে...', finalUrl);
+            return true;
+          }
+          if (trxId) {
+            toast(d.message || 'এই TrxID এখনো আসেনি। ৫ সেকেন্ড পর আবার চেষ্টা করুন।', true);
+          }
+        } catch (e) {
+          if (trxId) toast('নেটওয়ার্ক সমস্যা, আবার চেষ্টা করুন।', true);
+        }
+        return false;
+      }
+
+      async function bootCheckout() {
+        renderAmountUI();
+        renderWalletGrid();
+        startCountdown();
+
+        // Fetch real invoice & active wallets in background (non-blocking — instant UI!)
+        try {
+          const r = await fetch(ORIGIN + '/api/verify-payment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ invoice_id: invId })
+          });
+          const d = await r.json();
+          if (d.invoice) {
+            amount = d.invoice.amount;
+            if (d.invoice.customer_redirect_url) redirectUrl = d.invoice.customer_redirect_url;
+            renderAmountUI();
+            if (d.payment_status === 'APPROVED') {
+              verifyNow('');
+              return;
+            }
+          }
+          if (Array.isArray(d.wallets) && d.wallets.length > 0) {
+            wallets = d.wallets;
+            renderWalletGrid();
+          }
+        } catch (e) {}
+
+        // Auto-Poll every 2.5 seconds (Auto-Verify WITHOUT needing TrxID!)
+        pollHandle = setInterval(() => verifyNow(''), 2500);
+      }
+
+      // Wire UI Controls
+      document.getElementById('toggleDetailsBtn').addEventListener('click', () => {
+        document.getElementById('orderDetailsBox').classList.toggle('hidden');
+      });
+      document.getElementById('step1ContinueBtn').addEventListener('click', () => openStep2());
+      document.getElementById('backBtn').addEventListener('click', () => {
+        if (!document.getElementById('step2').classList.contains('hidden')) goBackToStep1();
+        else document.getElementById('cancelModal').classList.remove('hidden');
+      });
+      document.getElementById('closeCancelBtn').addEventListener('click', () => document.getElementById('cancelModal').classList.remove('hidden'));
+      document.getElementById('cancelTextLink').addEventListener('click', () => document.getElementById('cancelModal').classList.remove('hidden'));
+      document.getElementById('step2CancelBtn').addEventListener('click', () => document.getElementById('cancelModal').classList.remove('hidden'));
+      document.getElementById('cancelGoBackBtn').addEventListener('click', () => document.getElementById('cancelModal').classList.add('hidden'));
+
+      document.getElementById('cancelConfirmBtn').addEventListener('click', () => {
+        document.getElementById('cancelModal').classList.add('hidden');
+        let cTarget = cancelUrl || redirectUrl;
+        if (cTarget) {
+          const sep = cTarget.includes('?') ? '&' : '?';
+          cTarget += `${sep}status=cancelled&invoice_id=${encodeURIComponent(invId)}`;
+        }
+        showFinalScreen(false, 'ইনভয়েস বাতিল করা হয়েছে', 'আপনাকে ৩ সেকেন্ডের মধ্যে আগের ওয়েবসাইটে নিয়ে যাওয়া হচ্ছে...', cTarget);
+      });
+
+      document.getElementById('guideAppTab').addEventListener('click', () => { guideMode = 'app'; renderGuideSteps(); });
+      document.getElementById('guideDialTab').addEventListener('click', () => { guideMode = 'dial'; renderGuideSteps(); });
+
+      document.getElementById('copyPhoneBtn').addEventListener('click', () => {
+        const num = document.getElementById('receiverPhoneShow').textContent;
+        navigator.clipboard?.writeText(num);
+        const btn = document.getElementById('copyPhoneBtn');
+        btn.textContent = '✓ কপি হয়েছে!';
+        toast('নাম্বার কপি হয়েছে: ' + num, false);
+        setTimeout(() => { btn.textContent = '📋 কপি করুন'; }, 2000);
+      });
+
+      document.getElementById('verifyBtn').addEventListener('click', async () => {
+        const trx = document.getElementById('trxInput').value.trim();
+        if (!trx) {
+          toast('দয়া করে আপনার TrxID লিখুন অথবা পেমেন্ট করে ১০ সেকেন্ড অপেক্ষা করুন।', true);
+          return;
+        }
+        const btn = document.getElementById('verifyBtn');
+        btn.textContent = 'ভেরিফাই হচ্ছে...';
+        btn.disabled = true;
+        await verifyNow(trx);
+        btn.textContent = '✓ ভেরিফাই করুন (Verify)';
+        btn.disabled = false;
+      });
+
+      bootCheckout();
+    })();
+  </script>
+</body>
+</html>
