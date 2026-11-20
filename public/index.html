@@ -193,11 +193,17 @@
         <a id="apkDownloadBtn" href="https://github.com/freefireaivideo23372-wq/shohojpay-platform/releases/latest/download/ShohojPay.apk" class="inline-flex items-center justify-center w-full sm:w-auto px-8 py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-base shadow-lg transition">
           ⬇️ সরাসরি ShohojPay.apk ডাউনলোড করুন
         </a>
-        <div class="text-left p-4 rounded-2xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 text-xs sm:text-sm space-y-1.5 text-slate-700 dark:text-slate-300">
-          <div class="font-bold text-amber-800 dark:text-amber-300">ইনস্টল করার নিয়ম (Google Play Service বন্ধ করতে হবে না):</div>
-          <p>১. <strong>ShohojPay.apk</strong> ডাউনলোড করে ট্যাপ করুন।</p>
-          <p>২. Play Protect পপ-আপ এলে <strong>"More details"</strong> > <strong>"Install anyway"</strong> চাপুন।</p>
-          <p>৩. অ্যাপ খুলে SMS অনুমতি দিন এবং আপনার ড্যাশবোর্ড থেকে <strong>API Key</strong> কপি করে বসিয়ে <strong>"চালু করুন"</strong> চাপুন!</p>
+        <div class="text-left p-5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm space-y-3 text-slate-700 dark:text-slate-300">
+          <div class="font-extrabold text-base text-emerald-700 dark:text-emerald-400">📋 ইনস্টল ও SMS পারমিশন চালু করার সম্পূর্ণ বাংলা গাইড (মাত্র ১ মিনিট):</div>
+          <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+            <strong class="text-amber-600">ধাপ ১ (Play Protect সমাধান):</strong> <code>ShohojPay.apk</code> ডাউনলোড করে ট্যাপ করুন। যদি <strong>"Harmful app blocked"</strong> বা <strong>"App scan recommended"</strong> দেখায়, তবে <strong>"More details" > "Install anyway"</strong> চাপুন (অথবা Play Store > Profile > Play Protect > Settings থেকে সাময়িকভাবে অফ করে ইনস্টল করুন)।
+          </div>
+          <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+            <strong class="text-sky-600">ধাপ ২ (Android 13/14/15 SMS পারমিশন আনলক):</strong> অ্যাপ খুলে নিচের <strong>⚙️ Config</strong> ট্যাবে যান -> <strong>"OPEN APP SETTINGS (ALLOW SMS)"</strong> চাপুন -> ফোনের উপরের ডান কোনায় <strong>⋮ (৩ ডট)</strong> (অথবা একদম নিচে স্ক্রল করে) <strong>"Allow restricted settings"</strong> অন করুন -> এবার <strong>Permissions > SMS > Allow</strong> দিন!
+          </div>
+          <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+            <strong class="text-emerald-600">ধাপ ৩ (২৪/৭ ব্যাকগ্রাউন্ড অটো-ভেরিফিকেশন):</strong> অ্যাপের <strong>⚙️ Config</strong> ট্যাবে আপনার ড্যাশবোর্ড API Key বসিয়ে <strong>"SAVE API KEY & START 24/7 SERVICE"</strong> চাপুন। ফোনের নোটিফিকেশন বারে <strong>⚡ ShohojPay</strong> দেখালেই বুঝবেন ২৪/৭ ব্যাকগ্রাউন্ডে অটো পেমেন্ট ডিটেক্ট চলছে!
+          </div>
         </div>
       </div>
     </section>
@@ -376,10 +382,12 @@
 
         <!-- TAB: PAYMENT LINKS -->
         <div id="dtab-links" class="hidden bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 card-shadow space-y-4">
-          <h3 class="text-lg font-extrabold">🔗 Create Payment Link</h3>
-          <div class="flex flex-col sm:flex-row gap-2">
-            <input id="createLinkAmt" type="number" min="10" placeholder="টাকার পরিমাণ (যেমন: 500)" class="flex-1 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-4 py-3 text-sm" />
-            <button id="createRealLinkBtn" class="px-5 py-3 rounded-xl bg-emerald-600 text-white font-bold text-sm">লিংক তৈরি করুন</button>
+          <h3 class="text-lg font-extrabold">🔗 Create Payment Link (Auto-Redirect সহ)</h3>
+          <p class="text-xs text-slate-500">কাস্টমার আমাদের ব্র্যান্ডেড bKash/Nagad/Rocket পেজে পেমেন্ট করে ভেরিফাই হলেই অটোমেটিক আপনার ওয়েবসাইটের Success URL-এ ফিরে যাবে!</p>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <input id="createLinkAmt" type="number" min="10" placeholder="টাকার পরিমাণ (যেমন: 500)" class="rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-4 py-3 text-sm" />
+            <input id="createLinkRedirect" type="text" placeholder="Success Redirect URL (যেমন: https://myshop.com/thank-you)" class="rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-4 py-3 text-sm" />
+            <button id="createRealLinkBtn" class="px-5 py-3 rounded-xl bg-emerald-600 text-white font-bold text-sm">লিংক তৈরি ও প্রিভিউ করুন</button>
           </div>
           <div id="createdRealLinkBox" class="hidden p-4 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-between gap-2 text-xs">
             <a id="createdRealLinkHref" href="#" target="_blank" class="font-mono font-bold text-emerald-700 underline truncate"></a>
@@ -647,12 +655,43 @@
         }));
         document.getElementById('chkBackBtn').addEventListener('click', () => { document.getElementById('chkStep2').classList.add('hidden'); document.getElementById('chkStep1').classList.remove('hidden'); document.getElementById('chkBackBtn').classList.add('hidden'); });
         document.getElementById('chkCopyNumBtn').addEventListener('click', () => copyTxt(document.getElementById('chkSelGwNum').textContent, 'নাম্বার'));
+        // Auto-Poll every 3 seconds — automatically approves & redirects to merchant website without even clicking Verify!
+        const pollTimer = setInterval(async () => {
+          try {
+            const pr = await fetch(ORIGIN + '/api/verify-payment', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ invoice_id: invId }) });
+            const pd = await pr.json();
+            if (pd.payment_status === 'APPROVED') {
+              clearInterval(pollTimer);
+              document.getElementById('chkStep1').classList.add('hidden');
+              document.getElementById('chkStep2').classList.remove('hidden');
+              document.getElementById('chkBrandPanel').className = 'bg-emerald-600 text-white p-6 space-y-4 text-center';
+              document.getElementById('chkBrandPanel').innerHTML = '<div class="text-5xl">🎉</div><div class="text-2xl font-extrabold">পেমেন্ট অটো-ভেরিফাই হয়েছে!</div><p class="text-sm opacity-90">আপনাকে ৩ সেকেন্ডের মধ্যে ওয়েবসাইটে নিয়ে যাওয়া হচ্ছে...</p>';
+              const rUrl = pd.invoice && pd.invoice.customer_redirect_url;
+              if (rUrl) {
+                setTimeout(() => {
+                  const sep = rUrl.includes('?') ? '&' : '?';
+                  window.location.href = rUrl + sep + 'status=approved&invoice_id=' + encodeURIComponent(invId);
+                }, 2500);
+              }
+            }
+          } catch (e) {}
+        }, 3500);
         document.getElementById('chkVerifyBtn').addEventListener('click', async () => {
           const trx = document.getElementById('chkTrxInput').value.trim();
           const vr = await fetch(ORIGIN + '/api/verify-payment', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ invoice_id: invId, trx_id: trx }) });
           const vd = await vr.json();
-          if (vd.payment_status === 'APPROVED') { document.getElementById('chkStatusBanner').textContent = '🎉 পেমেন্ট ভেরিফাই হয়েছে!'; showToast('সফল!', 'পেমেন্ট অ্যাপ্রুভ হয়েছে!', false); }
-          else showToast('অপেক্ষা করুন', vd.message || 'এখনো মেসেজ আসেনি।', true);
+          if (vd.payment_status === 'APPROVED') {
+            document.getElementById('chkBrandPanel').className = 'bg-emerald-600 text-white p-6 space-y-4 text-center';
+            document.getElementById('chkBrandPanel').innerHTML = '<div class="text-5xl">🎉</div><div class="text-2xl font-extrabold">পেমেন্ট সফলভাবে ভেরিফাই হয়েছে!</div><p class="text-sm opacity-90">আপনাকে ৩ সেকেন্ডের মধ্যে মূল ওয়েবসাইটে নিয়ে যাওয়া হচ্ছে...</p>';
+            showToast('অভিনন্দন!', 'পেমেন্ট অ্যাপ্রুভ হয়েছে!', false);
+            const rUrl = vd.invoice && vd.invoice.customer_redirect_url;
+            if (rUrl) {
+              setTimeout(() => {
+                const sep = rUrl.includes('?') ? '&' : '?';
+                window.location.href = rUrl + sep + 'status=approved&invoice_id=' + encodeURIComponent(invId) + '&trx_id=' + encodeURIComponent(trx);
+              }, 2500);
+            }
+          } else showToast('অপেক্ষা করুন', vd.message || 'এখনো মেসেজ আসেনি।', true);
         });
         return true;
       }
@@ -719,7 +758,7 @@
 
         document.getElementById('createRealLinkBtn').addEventListener('click', async () => {
           const amount = Number(document.getElementById('createLinkAmt').value); if (!amount || amount < 10) return;
-          const r = await fetch(ORIGIN + '/api/create-payment', { method: 'POST', headers: { 'Content-Type': 'application/json', 'shohojpay-api-key': currentUser.api_key }, body: JSON.stringify({ amount, order_id: 'ORD_' + Date.now() }) });
+          const r = await fetch(ORIGIN + '/api/create-payment', { method: 'POST', headers: { 'Content-Type': 'application/json', 'shohojpay-api-key': currentUser.api_key }, body: JSON.stringify({ amount, order_id: 'ORD_' + Date.now(), redirect_url: (document.getElementById('createLinkRedirect')?.value || '').trim() }) });
           const d = await r.json();
           if (d.status) { document.getElementById('createdRealLinkHref').href = d.payment_url; document.getElementById('createdRealLinkHref').textContent = d.payment_url; document.getElementById('createdRealLinkBox').classList.remove('hidden'); showToast('লিংক তৈরি!', 'কপি করে কাস্টমারকে পাঠান।', false); }
         });

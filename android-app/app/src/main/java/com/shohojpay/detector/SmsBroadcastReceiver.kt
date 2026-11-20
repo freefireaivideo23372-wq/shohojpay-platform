@@ -16,7 +16,14 @@ class SmsBroadcastReceiver : BroadcastReceiver() {
         if (SmsStorage.isProviderAllowed(context, sender, body)) {
             SmsStorage.addOrUpdateLog(context, sender, body, "Pending")
             thread {
-                SmsStorage.pushToServerSync(context, sender, body)
+                val ok = SmsStorage.pushToServerSync(context, sender, body)
+                if (ok) {
+                    ShohojPayService.showPaymentNotification(
+                        context,
+                        "✓ পেমেন্ট সিঙ্ক হয়েছে ($sender)",
+                        body.take(80)
+                    )
+                }
             }
         }
     }

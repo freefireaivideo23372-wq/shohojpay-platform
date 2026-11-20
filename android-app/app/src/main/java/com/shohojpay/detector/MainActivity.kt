@@ -10,6 +10,7 @@ import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.Typeface
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.Gravity
@@ -33,34 +34,47 @@ class MainActivity : AppCompatActivity() {
         contentContainer = findViewById(R.id.contentContainer)
         subHeaderText = findViewById(R.id.subHeaderText)
 
-        ActivityCompat.requestPermissions(
-            this,
-            arrayOf(Manifest.permission.RECEIVE_SMS, Manifest.permission.READ_SMS),
-            101
-        )
+        val perms = mutableListOf(Manifest.permission.RECEIVE_SMS, Manifest.permission.READ_SMS)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            perms.add(Manifest.permission.POST_NOTIFICATIONS)
+        }
+        ActivityCompat.requestPermissions(this, perms.toTypedArray(), 101)
+
+        if (SmsStorage.getApiKey(this).isNotEmpty()) {
+            startBackgroundService()
+        }
 
         findViewById<Button>(R.id.syncNowBtn).setOnClickListener { syncRecentSmsInbox() }
-        findViewById<Button>(R.id.tabDashboard).setOnClickListener { switchTab("dashboard") }
-        findViewById<Button>(R.id.tabProviders).setOnClickListener { switchTab("providers") }
-        findViewById<Button>(R.id.tabBalance).setOnClickListener { switchTab("balance") }
-        findViewById<Button>(R.id.tabInsights).setOnClickListener { switchTab("insights") }
-        findViewById<Button>(R.id.tabConfig).setOnClickListener { switchTab("config") }
+        findViewById<LinearLayout>(R.id.tabDashboard).setOnClickListener { switchTab("dashboard") }
+        findViewById<LinearLayout>(R.id.tabProviders).setOnClickListener { switchTab("providers") }
+        findViewById<LinearLayout>(R.id.tabBalance).setOnClickListener { switchTab("balance") }
+        findViewById<LinearLayout>(R.id.tabInsights).setOnClickListener { switchTab("insights") }
+        findViewById<LinearLayout>(R.id.tabConfig).setOnClickListener { switchTab("config") }
 
         switchTab("dashboard")
     }
 
+    private fun startBackgroundService() {
+        try {
+            val svc = Intent(this, ShohojPayService::class.java)
+            ContextCompat.startForegroundService(this, svc)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
     private fun switchTab(tab: String) {
         activeTab = tab
-        val tabs = mapOf(
-            "dashboard" to findViewById<Button>(R.id.tabDashboard),
-            "providers" to findViewById<Button>(R.id.tabProviders),
-            "balance" to findViewById<Button>(R.id.tabBalance),
-            "insights" to findViewById<Button>(R.id.tabInsights),
-            "config" to findViewById<Button>(R.id.tabConfig)
+        val labels = mapOf(
+            "dashboard" to findViewById<TextView>(R.id.lblDashboard),
+            "providers" to findViewById<TextView>(R.id.lblProviders),
+            "balance" to findViewById<TextView>(R.id.lblBalance),
+            "insights" to findViewById<TextView>(R.id.lblInsights),
+            "config" to findViewById<TextView>(R.id.lblConfig)
         )
-        tabs.forEach { (k, btn) ->
-            btn.setTextColor(if (k == tab) Color.parseColor("#059669") else Color.parseColor("#64748B"))
-            btn.setTypeface(null, if (k == tab) Typeface.BOLD else Typeface.NORMAL)
+        labels.forEach { (k, tv) ->
+            tv.setTextColor(if (k == tab) Color.parseColor("#059669") else Color.parseColor("#475569"))
+            tv.setTypeface(null, if (k == tab) Typeface.BOLD else Typeface.NORMAL)
         }
         renderCurrentTab()
     }
@@ -68,7 +82,7 @@ class MainActivity : AppCompatActivity() {
     private fun renderCurrentTab() {
         contentContainer.removeAllViews()
         val hasKey = SmsStorage.getApiKey(this).isNotEmpty()
-        subHeaderText.text = if (hasKey) "Connected - Auto SMS Sync Ready" else "Config tab e giye API Key save korun"
+        subHeaderText.text = if (hasKey) "● 24/7 Background Notification Active" else "⚠ Config ট্যাবে গিয়ে আপনার API Key সেভ করুন"
 
         when (activeTab) {
             "dashboard" -> renderDashboard()
@@ -84,16 +98,16 @@ class MainActivity : AppCompatActivity() {
         setBackgroundColor(Color.WHITE)
         setPadding(36, 32, 36, 32)
         val lp = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-        lp.setMargins(0, 0, 0, 26)
+        lp.setMargins(0, 0, 0, 24)
         layoutParams = lp
-        elevation = 3f
+        elevation = 4f
     }
 
     private fun renderDashboard() {
         val filterRow = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             val lp = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-            lp.setMargins(0, 0, 0, 24)
+            lp.setMargins(0, 0, 0, 20)
             layoutParams = lp
         }
         listOf("All", "Pending", "Failed").forEach { f ->
@@ -101,7 +115,7 @@ class MainActivity : AppCompatActivity() {
                 text = f
                 textSize = 12f
                 isAllCaps = false
-                setBackgroundColor(if (activeFilter == f) Color.parseColor("#0284C7") else Color.WHITE)
+                setBackgroundColor(if (activeFilter == f) Color.parseColor("#059669") else Color.WHITE)
                 setTextColor(if (activeFilter == f) Color.WHITE else Color.parseColor("#334155"))
                 val lp = LinearLayout.LayoutParams(0, 100, 1f)
                 lp.setMargins(6, 0, 6, 0)
@@ -116,7 +130,7 @@ class MainActivity : AppCompatActivity() {
         if (logs.isEmpty()) {
             val emptyCard = makeCard()
             emptyCard.addView(TextView(this).apply {
-                text = "এখনো কোনো পেমেন্ট SMS সিঙ্ক হয়নি। Config ট্যাবে গিয়ে আপনার API Key সেভ করুন এবং উপরে SYNC বাটনে ক্লিক করুন।"
+                text = "এখনো কোনো পেমেন্ট SMS সিঙ্ক হয়নি। Config ট্যাবে গিয়ে API Key সেভ করুন এবং উপরে SYNC চাপুন।"
                 setTextColor(Color.parseColor("#475569"))
                 textSize = 14f
             })
@@ -131,7 +145,7 @@ class MainActivity : AppCompatActivity() {
                 text = item.optString("sender", "MFS")
                 textSize = 14f
                 setTypeface(null, Typeface.BOLD)
-                setTextColor(Color.parseColor("#0284C7"))
+                setTextColor(Color.parseColor("#059669"))
                 layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
             })
             topRow.addView(TextView(this).apply {
@@ -145,7 +159,7 @@ class MainActivity : AppCompatActivity() {
                 text = item.optString("body", "")
                 textSize = 13f
                 setTextColor(Color.parseColor("#0F172A"))
-                setPadding(0, 14, 0, 16)
+                setPadding(0, 12, 0, 14)
             })
 
             val btnRow = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
@@ -197,34 +211,29 @@ class MainActivity : AppCompatActivity() {
                 setTextColor(Color.parseColor("#0F172A"))
                 layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
             })
-            val sw = Switch(this).apply {
+            row.addView(Switch(this).apply {
                 isChecked = pair.second
                 setOnCheckedChangeListener { _, checked ->
                     list[idx] = pair.first to checked
                     SmsStorage.saveProviders(this@MainActivity, list)
                 }
-            }
-            row.addView(sw)
+            })
             card.addView(row)
             contentContainer.addView(card)
         }
 
         contentContainer.addView(Button(this).apply {
             text = "+ ADD PROVIDER"
-            setBackgroundColor(Color.parseColor("#0284C7"))
+            setBackgroundColor(Color.parseColor("#059669"))
             setTextColor(Color.WHITE)
             setOnClickListener {
-                val input = EditText(this@MainActivity).apply { hint = "যেমন: City Bank বা Trust Axiata" }
+                val input = EditText(this@MainActivity).apply { hint = "যেমন: City Bank" }
                 AlertDialog.Builder(this@MainActivity)
                     .setTitle("নতুন প্রোভাইডার যোগ করুন")
                     .setView(input)
                     .setPositiveButton("যোগ করুন") { _, _ ->
                         val name = input.text.toString().trim()
-                        if (name.isNotEmpty()) {
-                            list.add(name to true)
-                            SmsStorage.saveProviders(this@MainActivity, list)
-                            renderCurrentTab()
-                        }
+                        if (name.isNotEmpty()) { list.add(name to true); SmsStorage.saveProviders(this@MainActivity, list); renderCurrentTab() }
                     }
                     .setNegativeButton("বাতিল", null)
                     .show()
@@ -241,24 +250,24 @@ class MainActivity : AppCompatActivity() {
         val configs = SmsStorage.getBalanceConfigs(this)
         if (configs.isEmpty()) {
             val c = makeCard()
-            c.addView(TextView(this).apply { text = "No balance configs yet. নিচের বাটনে ক্লিক করে আপনার সিম ও ওয়ালেট যোগ করুন।"; setTextColor(Color.parseColor("#64748B")) })
+            c.addView(TextView(this).apply { text = "কোনো ব্যালেন্স কনফিগ নেই। নিচের বাটনে ক্লিক করে যোগ করুন।"; setTextColor(Color.parseColor("#64748B")) })
             contentContainer.addView(c)
         } else {
             configs.forEach { cfg ->
                 val c = makeCard()
-                c.addView(TextView(this).apply { text = "Active: $cfg"; textSize = 14f; setTypeface(null, Typeface.BOLD); setTextColor(Color.parseColor("#059669")) })
+                c.addView(TextView(this).apply { text = "✓ $cfg"; textSize = 14f; setTypeface(null, Typeface.BOLD); setTextColor(Color.parseColor("#059669")) })
                 contentContainer.addView(c)
             }
         }
 
         contentContainer.addView(Button(this).apply {
             text = "+ ADD CONFIGURATION"
-            setBackgroundColor(Color.parseColor("#0284C7"))
+            setBackgroundColor(Color.parseColor("#059669"))
             setTextColor(Color.WHITE)
             setOnClickListener {
                 val input = EditText(this@MainActivity).apply { hint = "যেমন: SIM 1 - bKash (01773895998)" }
                 AlertDialog.Builder(this@MainActivity)
-                    .setTitle("ব্যালেন্স কনফিগারেশন যোগ করুন")
+                    .setTitle("ব্যালেন্স কনফিগ যোগ করুন")
                     .setView(input)
                     .setPositiveButton("সেভ") { _, _ ->
                         val v = input.text.toString().trim()
@@ -274,12 +283,12 @@ class MainActivity : AppCompatActivity() {
         val logs = SmsStorage.getLogs(this)
         val successCount = logs.count { it.optString("status") == "Success" }
         val card = makeCard()
-        card.addView(TextView(this).apply { text = "Analytics & Insights"; textSize = 18f; setTypeface(null, Typeface.BOLD); setTextColor(Color.parseColor("#0F172A")) })
+        card.addView(TextView(this).apply { text = "Analytics & Stats"; textSize = 18f; setTypeface(null, Typeface.BOLD); setTextColor(Color.parseColor("#0F172A")) })
         card.addView(TextView(this).apply {
             text = "Total Synced Transactions: $successCount"
             textSize = 16f
             setTypeface(null, Typeface.BOLD)
-            setTextColor(Color.parseColor("#0284C7"))
+            setTextColor(Color.parseColor("#059669"))
             setPadding(0, 16, 0, 8)
         })
         card.addView(TextView(this).apply { text = "Total Captured Messages: ${logs.size}"; textSize = 14f; setTextColor(Color.parseColor("#475569")) })
@@ -288,7 +297,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun renderConfig() {
         val apiCard = makeCard()
-        apiCard.addView(TextView(this).apply { text = "API Configuration"; textSize = 17f; setTypeface(null, Typeface.BOLD); setTextColor(Color.parseColor("#0F172A")) })
+        apiCard.addView(TextView(this).apply { text = "API Configuration & 24/7 Service"; textSize = 17f; setTypeface(null, Typeface.BOLD); setTextColor(Color.parseColor("#0F172A")) })
         val keyInput = EditText(this).apply {
             hint = "sp_live_..."
             setText(SmsStorage.getApiKey(this@MainActivity))
@@ -296,22 +305,23 @@ class MainActivity : AppCompatActivity() {
         }
         apiCard.addView(keyInput)
         apiCard.addView(Button(this).apply {
-            text = "SAVE API KEY"
+            text = "SAVE API KEY & START 24/7 SERVICE"
             setBackgroundColor(Color.parseColor("#059669"))
             setTextColor(Color.WHITE)
             setOnClickListener {
                 SmsStorage.saveApiKey(this@MainActivity, keyInput.text.toString())
-                Toast.makeText(this@MainActivity, "API Key Saved!", Toast.LENGTH_SHORT).show()
+                startBackgroundService()
+                Toast.makeText(this@MainActivity, "API Key সেভ ও ২৪/৭ ব্যাকগ্রাউন্ড সার্ভিস চালু হয়েছে!", Toast.LENGTH_LONG).show()
                 renderCurrentTab()
             }
         })
         contentContainer.addView(apiCard)
 
         val permCard = makeCard()
-        permCard.addView(TextView(this).apply { text = "Permissions & Background Run"; textSize = 17f; setTypeface(null, Typeface.BOLD); setTextColor(Color.parseColor("#0F172A")) })
+        permCard.addView(TextView(this).apply { text = "Permissions & Battery"; textSize = 17f; setTypeface(null, Typeface.BOLD); setTextColor(Color.parseColor("#0F172A")) })
         val hasSms = ContextCompat.checkSelfPermission(this, Manifest.permission.RECEIVE_SMS) == PackageManager.PERMISSION_GRANTED
         permCard.addView(TextView(this).apply {
-            text = if (hasSms) "Receive & Read SMS: ALLOWED" else "SMS Permission Denied - নিচের বাটন চেপে Allow restricted settings অন করুন"
+            text = if (hasSms) "✓ Receive & Read SMS: ALLOWED" else "✕ SMS Permission Denied - নিচের বাটন চেপে Allow restricted settings অন করুন"
             setTextColor(if (hasSms) Color.parseColor("#059669") else Color.parseColor("#DC2626"))
             setPadding(0, 12, 0, 16)
         })
@@ -320,10 +330,9 @@ class MainActivity : AppCompatActivity() {
             setBackgroundColor(Color.parseColor("#0284C7"))
             setTextColor(Color.WHITE)
             setOnClickListener {
-                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
                     data = Uri.parse("package:$packageName")
-                }
-                startActivity(intent)
+                })
             }
         })
         contentContainer.addView(permCard)
@@ -352,7 +361,7 @@ class MainActivity : AppCompatActivity() {
                 }
             } catch (e: Exception) { e.printStackTrace() }
             runOnUiThread {
-                Toast.makeText(this, "Sync সম্পন্ন! ($count টি পেমেন্ট মেসেজ চেক হয়েছে)", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "Sync সম্পন্ন! ($count টি মেসেজ চেক হয়েছে)", Toast.LENGTH_LONG).show()
                 renderCurrentTab()
             }
         }

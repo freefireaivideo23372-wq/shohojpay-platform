@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#F4F7FA">
+    android:background="#F1F5F9">
 
     <!-- Top App Header -->
     <LinearLayout
@@ -11,9 +11,12 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:padding="16dp"
-        android:background="#FFFFFF"
-        android:elevation="2dp">
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
+        android:paddingTop="14dp"
+        android:paddingBottom="14dp"
+        android:background="#059669"
+        android:elevation="4dp">
 
         <LinearLayout
             android:layout_width="0dp"
@@ -23,17 +26,17 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="⚡ ShohojPay"
+                android:text="⚡ ShohojPay Pro"
                 android:textSize="20sp"
                 android:textStyle="bold"
-                android:textColor="#059669" />
+                android:textColor="#FFFFFF" />
             <TextView
                 android:id="@+id/subHeaderText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Auto SMS Payment Sync Active"
+                android:text="24/7 Background Auto-Sync Active"
                 android:textSize="12sp"
-                android:textColor="#64748B" />
+                android:textColor="#D1FAE5" />
         </LinearLayout>
 
         <Button
@@ -43,11 +46,11 @@
             android:text="↻ SYNC"
             android:textSize="12sp"
             android:textStyle="bold"
-            android:textColor="#FFFFFF"
-            android:backgroundTint="#0284C7" />
+            android:textColor="#059669"
+            android:backgroundTint="#FFFFFF" />
     </LinearLayout>
 
-    <!-- Main Scrollable Content Area -->
+    <!-- Main Scrollable Content -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -61,69 +64,80 @@
             android:orientation="vertical" />
     </ScrollView>
 
-    <!-- 5-Tab Bottom Navigation Bar (Matches ZiniPay!) -->
+    <!-- CRYSTAL-CLEAR 5-TAB BOTTOM BAR (LinearLayout Icon + Label — Zero Clipping!) -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="62dp"
+        android:layout_height="68dp"
         android:orientation="horizontal"
         android:background="#FFFFFF"
-        android:elevation="8dp"
+        android:elevation="12dp"
         android:paddingTop="6dp"
         android:paddingBottom="6dp">
 
-        <Button
+        <LinearLayout
             android:id="@+id/tabDashboard"
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="match_parent"
-            android:text="Dashboard"
-            android:textSize="10sp"
-            android:textAllCaps="false"
-            android:background="@android:color/transparent"
-            android:textColor="#059669" />
+            android:orientation="vertical"
+            android:gravity="center"
+            android:clickable="true"
+            android:focusable="true">
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="🏠" android:textSize="18sp" />
+            <TextView android:id="@+id/lblDashboard" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Home" android:textSize="11sp" android:textStyle="bold" android:textColor="#059669" />
+        </LinearLayout>
 
-        <Button
+        <LinearLayout
             android:id="@+id/tabProviders"
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="match_parent"
-            android:text="Providers"
-            android:textSize="10sp"
-            android:textAllCaps="false"
-            android:background="@android:color/transparent"
-            android:textColor="#64748B" />
+            android:orientation="vertical"
+            android:gravity="center"
+            android:clickable="true"
+            android:focusable="true">
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="📲" android:textSize="18sp" />
+            <TextView android:id="@+id/lblProviders" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Wallets" android:textSize="11sp" android:textColor="#475569" />
+        </LinearLayout>
 
-        <Button
+        <LinearLayout
             android:id="@+id/tabBalance"
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="match_parent"
-            android:text="Balance"
-            android:textSize="10sp"
-            android:textAllCaps="false"
-            android:background="@android:color/transparent"
-            android:textColor="#64748B" />
+            android:orientation="vertical"
+            android:gravity="center"
+            android:clickable="true"
+            android:focusable="true">
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="🛡️" android:textSize="18sp" />
+            <TextView android:id="@+id/lblBalance" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Balance" android:textSize="11sp" android:textColor="#475569" />
+        </LinearLayout>
 
-        <Button
+        <LinearLayout
             android:id="@+id/tabInsights"
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="match_parent"
-            android:text="Insights"
-            android:textSize="10sp"
-            android:textAllCaps="false"
-            android:background="@android:color/transparent"
-            android:textColor="#64748B" />
+            android:orientation="vertical"
+            android:gravity="center"
+            android:clickable="true"
+            android:focusable="true">
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="📊" android:textSize="18sp" />
+            <TextView android:id="@+id/lblInsights" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Stats" android:textSize="11sp" android:textColor="#475569" />
+        </LinearLayout>
 
-        <Button
+        <LinearLayout
             android:id="@+id/tabConfig"
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="match_parent"
-            android:text="Config"
-            android:textSize="10sp"
-            android:textAllCaps="false"
-            android:background="@android:color/transparent"
-            android:textColor="#64748B" />
+            android:orientation="vertical"
+            android:gravity="center"
+            android:clickable="true"
+            android:focusable="true">
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="⚙️" android:textSize="18sp" />
+            <TextView android:id="@+id/lblConfig" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Config" android:textSize="11sp" android:textColor="#475569" />
+        </LinearLayout>
+
     </LinearLayout>
 </LinearLayout>
