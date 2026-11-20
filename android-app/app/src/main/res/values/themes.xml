@@ -1,12 +1,8 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Theme.ShohojPayDetector" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <!-- Primary brand color. -->
-        <item name="colorPrimary">@color/primary</item>
-        <item name="colorPrimaryVariant">@color/primary_dark</item>
-        <item name="colorOnPrimary">@color/text_white</item>
-        <!-- Status bar color. -->
-        <item name="android:statusBarColor">@color/bg_dark</item>
-        <!-- Customize your theme here. -->
+<resources>
+    <style name="Theme.ShohojPay" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="colorPrimary">#059669</item>
+        <item name="colorPrimaryVariant">#047857</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="android:statusBarColor">#059669</item>
     </style>
 </resources>
